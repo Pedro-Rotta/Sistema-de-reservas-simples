@@ -4,3 +4,4 @@ Thumbs.db
 .env
 .clasp.json
 .vscode/
+dist/
