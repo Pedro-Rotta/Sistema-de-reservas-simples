@@ -100,8 +100,20 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .destaque { color: var(--azul); }
 .hero__sub { margin: 18px 0 28px; max-width: 34rem; color: var(--texto-2); font-size: 1.05rem; }
 .hero__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
-.preco { margin: 0; color: var(--texto-2); }
-.preco span { font-family: var(--fonte-titulo); font-size: 2rem; font-weight: 700; color: var(--texto); margin-right: 4px; }
+.preco-destaque {
+  display: inline-grid; grid-template-columns: auto auto; align-items: end; gap: 0 18px;
+  padding: 12px 22px 14px 20px;
+  border: 1px solid var(--azul); border-radius: 12px;
+  background: linear-gradient(135deg, rgba(47, 123, 255, .28), rgba(47, 123, 255, .06));
+  text-decoration: none;
+  box-shadow: 0 0 0 4px rgba(47, 123, 255, .08), 0 18px 40px -14px rgba(47, 123, 255, .85);
+  transition: background .2s, transform .2s;
+}
+.preco-destaque:hover { background: linear-gradient(135deg, rgba(47, 123, 255, .38), rgba(47, 123, 255, .1)); transform: translateY(-1px); }
+.preco-destaque__rotulo { grid-column: 1; font-size: .78rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--azul-hover); }
+.preco-destaque__valor { grid-column: 1; display: flex; align-items: flex-start; gap: 4px; font-family: var(--fonte-titulo); font-size: 4.2rem; font-weight: 700; line-height: .9; color: #fff; text-shadow: 0 0 24px rgba(47, 123, 255, .6); }
+.preco-destaque__valor small { font-size: 1.6rem; line-height: 1; margin-top: 6px; color: var(--azul-hover); text-shadow: none; }
+.preco-destaque__link { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: .85rem; font-weight: 500; color: var(--texto); max-width: 8rem; }
 
 /* ============================ Destaques: em domicílio ============================ */
 .destaques-casa { list-style: none; margin: -8px 0 28px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -154,6 +166,18 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 
 .galeria { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+/* ============================ Tabela de preços ============================ */
+.banner-preco {
+  display: grid; gap: 16px 32px; align-items: center;
+  margin-top: 32px; padding: 28px;
+  border: 1px solid var(--azul); border-radius: var(--raio);
+  background: radial-gradient(80% 140% at 100% 0%, rgba(47, 123, 255, .25), transparent 60%), var(--preto);
+}
+.banner-preco p { margin: 0; }
+.banner-preco__rotulo { font-family: var(--fonte-titulo); line-height: 1.1; font-size: 1.6rem; font-weight: 700; text-transform: uppercase; }
+.banner-preco .banner-preco__desc { margin-top: 4px; color: var(--texto-2); }
+.banner-preco__valor { font-family: var(--fonte-titulo); font-size: 3.6rem; font-weight: 700; line-height: 1; color: var(--azul); }
+
 /* ============================ Reservas (tema escuro) ============================ */
 .faixa-reservas {
   border-bottom: 1px solid var(--linha);
@@ -201,9 +225,14 @@ h3 { font-size: 1.35rem; font-weight: 600; }
   .incluso { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .passos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .produtos__grupo--largo { grid-column: 1 / -1; }
+  .produtos__grupo--largo h3 { text-align: center; }
+  .produtos__grupo--largo ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+  .produtos__grupo--largo li + li { border-top: 0; padding-top: 0; border-left: 1px solid var(--linha); padding-left: 28px; }
   .galeria { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rodape__linha { grid-template-columns: 1fr auto; align-items: end; }
   .rodape__contato { text-align: right; }
+  .banner-preco { grid-template-columns: 1fr auto auto; }
 }
 @media (min-width: 960px) {
   .hero { padding: 96px 0 104px; }

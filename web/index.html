@@ -26,6 +26,7 @@
         <a href="#incluso">Serviço</a>
         <a href="#produtos">Produtos</a>
         <a href="#como-funciona">Como funciona</a>
+        <a href="#precos">Preços</a>
         <a href="#trabalhos">Trabalhos</a>
       </nav>
       <a class="botao botao--pequeno" href="#reservas">Reservar</a>
@@ -40,8 +41,7 @@
           <p class="etiqueta">Lavagem em domicílio · <span class="sem-quebra">Presidente Prudente</span></p>
           <h1>Seu carro limpo,<br><span class="destaque">na sua casa.</span></h1>
           <p class="hero__sub">
-            Eu vou até o seu endereço em Presidente Prudente e lavo o carro por dentro e por fora.
-            Você escolhe o horário pelo site e não precisa sair de casa.
+            Lavo o seu carro por dentro e por fora.
           </p>
           <ul class="destaques-casa" aria-label="Atendimento em domicílio">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg> Vou até você</li>
@@ -49,8 +49,11 @@
             <li>Terça a quinta, com hora marcada</li>
           </ul>
           <div class="hero__acoes">
-            <a class="botao" href="#reservas">Reservar horário</a>
-            <p class="preco"><span>R$ 50</span> por lavagem</p>
+            <a class="preco-destaque" href="#precos">
+              <span class="preco-destaque__rotulo">A partir de</span>
+              <span class="preco-destaque__valor"><small>R$</small>35</span>
+              <span class="preco-destaque__link">Ver tabela de preços →</span>
+            </a>
           </div>
         </div>
 
@@ -92,7 +95,7 @@
         </ul>
 
         <p class="nota">
-          Não fazemos polimento, vitrificação nem higienização de bancos.
+          Não fazemos polimento, vitrificação nem higienização pesada de bancos.
           <!-- EDITAR: ajuste esta frase ao que você realmente não faz -->
         </p>
       </div>
@@ -154,7 +157,7 @@
             </ul>
           </article>
 
-          <article class="produtos__grupo">
+          <article class="produtos__grupo produtos__grupo--largo">
             <h3>Rodas e freios</h3>
             <ul>
               <li>
@@ -166,12 +169,6 @@
                   <p>Remove a poeira de ferro que sai das pastilhas e gruda nas rodas, calotas e na área dos discos de freio.</p>
                 </div>
               </li>
-            </ul>
-          </article>
-
-          <article class="produtos__grupo">
-            <h3>Finalização</h3>
-            <ul>
               <li>
                 <div class="produto__foto" data-nome="Pneu Pretinho">
                   <img src="img/produtos/pneu-pretinho.webp" alt="Embalagem do Pneu Pretinho" width="160" height="160" loading="lazy" onerror="this.remove()">
@@ -214,6 +211,22 @@
             <!-- EDITAR: se precisar de algo do cliente (água, tomada, vaga), diga aqui -->
           </li>
         </ol>
+      </div>
+    </section>
+
+    <!-- ===================== Tabela de preços ===================== -->
+    <section id="precos" class="secao secao--escura">
+      <div class="container">
+        <h2>Tabela de preços</h2>
+        <!-- EDITAR: a tabela completa entra aqui depois -->
+        <div class="banner-preco">
+          <div>
+            <p class="banner-preco__rotulo">Lavagem completa na sua casa</p>
+            <p class="banner-preco__desc">Por dentro e por fora, com os produtos listados acima.</p>
+          </div>
+          <p class="banner-preco__valor">R$ 65</p>
+          <a class="botao" href="#reservas">Reservar horário</a>
+        </div>
       </div>
     </section>
 
