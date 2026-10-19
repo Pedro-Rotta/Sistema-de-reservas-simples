@@ -1,5 +1,5 @@
 // URL do Web App do Google Apps Script (termina em /exec). Veja docs/CONFIGURACAO.md.
-const RESERVAS_API_URL = 'COLE_AQUI_A_URL_DO_WEB_APP';
+const RESERVAS_API_URL = '';
 
 (function () {
   const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -12,6 +12,37 @@ const RESERVAS_API_URL = 'COLE_AQUI_A_URL_DO_WEB_APP';
   const erroEl = $('reservas-erro');
 
   const reais = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  // Abra a página com ?demo no final da URL para ver o fluxo com dados de exemplo.
+  // Telefone terminado em 1111 simula cliente recorrente.
+  const DEMO = new URLSearchParams(location.search).has('demo');
+
+  async function chamarApi(opcoes) {
+    if (DEMO) return apiDemo(opcoes);
+    if (!RESERVAS_API_URL) throw new Error('sem-url');
+    const res = await fetch(RESERVAS_API_URL, opcoes);
+    return res.json();
+  }
+
+  function apiDemo(opcoes) {
+    if (!opcoes) {
+      const slots = [];
+      for (let i = 1; i <= 21; i++) {
+        const d = new Date(Date.now() + i * 864e5);
+        if ([2, 3, 4].includes(d.getDay())) {
+          const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          ['09:00', '14:00', '17:00'].forEach((horario) => slots.push({ data: iso, horario }));
+        }
+      }
+      return { ok: true, valorServico: 50, valorSinal: 20, slots };
+    }
+    const b = JSON.parse(opcoes.body);
+    const recorrente = b.telefone.replace(/\D/g, '').endsWith('1111');
+    return recorrente
+      ? { ok: true, status: 'confirmada', recorrente, data: b.data, horario: b.horario }
+      : { ok: true, status: 'aguardando sinal', recorrente, data: b.data, horario: b.horario,
+          pix: { valor: 20, copiaECola: 'DEMONSTRACAO-SEM-VALOR-PIX-REAL' } };
+  }
 
   function rotuloData(iso) {
     const [a, m, d] = iso.split('-').map(Number);
@@ -80,13 +111,14 @@ const RESERVAS_API_URL = 'COLE_AQUI_A_URL_DO_WEB_APP';
     slotsEl.innerHTML = '<p class="reservas-info">Carregando horários…</p>';
     atualizarBotao();
     try {
-      const res = await fetch(RESERVAS_API_URL);
-      const json = await res.json();
+      const json = await chamarApi();
       if (!json.ok) throw new Error(json.erro);
       document.querySelectorAll('[data-valor-servico]').forEach((el) => (el.textContent = reais(json.valorServico)));
       renderizarSlots(json.slots);
     } catch (e) {
-      slotsEl.innerHTML = '<p class="reservas-erro">Não foi possível carregar os horários. Tente novamente mais tarde.</p>';
+      slotsEl.innerHTML = e.message === 'sem-url'
+        ? '<p class="reservas-info">As reservas pelo site estarão disponíveis em breve. Enquanto isso, chame no <a href="https://wa.me/5518998051878" target="_blank" rel="noopener">WhatsApp</a>.</p>'
+        : '<p class="reservas-erro">Não foi possível carregar os horários. Tente novamente mais tarde.</p>';
     }
   }
 
@@ -125,11 +157,10 @@ const RESERVAS_API_URL = 'COLE_AQUI_A_URL_DO_WEB_APP';
     botao.textContent = 'Reservando…';
     try {
       // Corpo como texto simples evita o "preflight" de CORS, que o Apps Script não suporta.
-      const res = await fetch(RESERVAS_API_URL, {
+      const json = await chamarApi({
         method: 'POST',
         body: JSON.stringify({ data, horario, telefone: telefoneEl.value }),
       });
-      const json = await res.json();
       if (!json.ok) {
         mostrarErro(json.erro);
         carregarSlots();

@@ -60,24 +60,20 @@ Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **
 
 **Ao alterar o código depois:** use **Implantar → Gerenciar implantações → lápis (editar) → Versão: Nova versão → Implantar**. Assim a URL continua a mesma. (Criar uma "Nova implantação" gera outra URL.)
 
-## 4. Página de reservas
+## 4. Landing page e reservas
 
-1. Abra [`web/reservas.js`](../web/reservas.js) e troque a primeira linha:
+A landing page completa está em `web/index.html` (com a seção de reservas embutida).
+
+1. Abra [`web/reservas.js`](../web/reservas.js) e troque a segunda linha:
    ```js
-   const RESERVAS_API_URL = 'https://script.google.com/macros/s/SEU_ID/exec';
+   const RESERVAS_API_URL = "https://script.google.com/macros/s/SEU_ID/exec";
    ```
-2. Abra `web/index.html` no navegador para testar.
-
-### Integrar na landing page
-
-- **Opção A — mesma página:** copie a `<section id="reservas">…</section>` de `web/index.html` para a landing page e inclua, antes do `</body>`:
-  ```html
-  <link rel="stylesheet" href="reservas.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="reservas.js"></script>
-  ```
-  As cores ficam em variáveis no topo de `reservas.css` (`--r-cor` etc.).
-- **Opção B — página separada:** publique a pasta `web/` e coloque um botão "Reservar horário" na landing page apontando para ela.
+   Enquanto estiver vazia, a seção mostra um aviso com link para o WhatsApp.
+2. Para ver o fluxo sem a planilha, abra a página com `?demo` no final da URL
+   (ex.: `http://localhost:5180/?demo`). Telefone terminado em `1111` simula cliente recorrente.
+3. Rodar localmente: `npx http-server web -p 5180` e abrir <http://localhost:5180>.
+4. Os pontos a personalizar estão marcados com `EDITAR` no HTML (nome, itens inclusos, fotos, local).
+   Fotos vão em `web/img/`. Cores e fontes ficam nos tokens no topo de `web/landing.css`.
 
 ## 5. Hospedagem
 

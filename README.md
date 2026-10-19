@@ -1,12 +1,13 @@
 # Sistema de reservas simples
 
-Sistema de reservas de horários para a landing page, sem backend completo: página estática + Google Sheets + Google Apps Script, com notificação no WhatsApp via CallMeBot.
+Landing page de lavagem automotiva com reservas de horário, sem backend completo: página estática + Google Sheets + Google Apps Script, com notificação no WhatsApp via CallMeBot.
 
 ## Estrutura
 
 ```
 apps-script/Code.gs      → backend (Google Apps Script, Web App GET/POST)
-web/index.html           → página de reservas
+web/index.html           → landing page (lavagem automotiva) com a seção de reservas
+web/landing.css          → visual da landing (tokens de cor e fonte no topo)
 web/reservas.js          → lógica da página (configure a URL do Web App aqui)
 web/reservas.css         → estilos (cores em variáveis no topo)
 docs/CONFIGURACAO.md     → passo a passo: planilha, CallMeBot, deploy e hospedagem

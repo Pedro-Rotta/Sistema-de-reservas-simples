@@ -1,0 +1,196 @@
+/* ============================ Tokens ============================ */
+:root {
+  --preto: #07090d;
+  --superficie: #0d1219;
+  --superficie-2: #121a24;
+  --linha: #1c2635;
+  --linha-forte: #2a3a52;
+  --azul: #2f7bff;
+  --azul-hover: #5895ff;
+  --azul-suave: rgba(47, 123, 255, 0.14);
+  --texto: #e8edf4;
+  --texto-2: #a3afc1;
+  --texto-3: #74829a;
+
+  --fonte-titulo: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --fonte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --raio: 10px;
+  --largura: 1120px;
+  --gutter: 16px;
+}
+
+/* ============================ Base ============================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  background: var(--preto);
+  color: var(--texto);
+  font-family: var(--fonte);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--fonte-titulo); font-weight: 700; line-height: 1.05; margin: 0; letter-spacing: .3px; }
+h2 { font-size: clamp(2rem, 5vw, 2.75rem); text-transform: uppercase; }
+h3 { font-size: 1.35rem; font-weight: 600; }
+:focus-visible { outline: 2px solid var(--azul); outline-offset: 3px; }
+
+.container { max-width: var(--largura); margin: 0 auto; padding: 0 var(--gutter); }
+
+.pular {
+  position: absolute; left: 8px; top: -48px; z-index: 50;
+  background: var(--azul); color: #fff; padding: 8px 14px; border-radius: 6px; text-decoration: none;
+}
+.pular:focus { top: 8px; }
+
+/* ============================ Botões ============================ */
+.botao {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 0 24px;
+  background: var(--azul); color: #fff;
+  font-weight: 600; text-decoration: none;
+  border-radius: 8px; border: 1px solid var(--azul);
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.botao:hover { background: var(--azul-hover); border-color: var(--azul-hover); }
+.botao:active { transform: translateY(1px); }
+.botao--pequeno { min-height: 40px; padding: 0 16px; font-size: .9rem; }
+.botao--contorno { background: transparent; color: var(--texto); border-color: var(--linha-forte); }
+.botao--contorno:hover { background: var(--azul-suave); border-color: var(--azul); }
+
+/* ============================ Topo ============================ */
+.topo {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(7, 9, 13, .82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--linha);
+}
+.topo__linha { display: flex; align-items: center; gap: 24px; height: 64px; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--fonte-titulo); font-size: 1.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.marca small { display: block; font-family: var(--fonte); font-size: .68rem; font-weight: 500; color: var(--texto-3); letter-spacing: 1.5px; margin-top: -2px; }
+.marca__ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--azul); box-shadow: 0 0 12px var(--azul); flex: none; }
+.menu { display: none; gap: 28px; margin-left: auto; font-size: .92rem; }
+.menu a { color: var(--texto-2); text-decoration: none; }
+.menu a:hover { color: var(--texto); }
+.topo .botao { margin-left: auto; }
+
+/* ============================ Abertura ============================ */
+.hero {
+  position: relative;
+  padding: 56px 0 64px;
+  border-bottom: 1px solid var(--linha);
+  overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 85% 30%, rgba(47, 123, 255, .22), transparent 70%),
+    linear-gradient(180deg, #0a0e15 0%, var(--preto) 100%);
+}
+/* Faixa de luz diagonal, como reflexo em lataria */
+.hero::before {
+  content: ""; position: absolute; inset: -40% -10% auto auto; width: 60%; height: 180%;
+  background: linear-gradient(100deg, transparent 40%, rgba(120, 170, 255, .08) 50%, transparent 60%);
+  transform: rotate(8deg); pointer-events: none;
+}
+.hero__grade { position: relative; display: grid; gap: 36px; align-items: center; }
+.etiqueta { margin: 0 0 14px; color: var(--azul-hover); font-size: .8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+.hero h1 { font-size: clamp(2.8rem, 9vw, 4.6rem); text-transform: uppercase; }
+.destaque { color: var(--azul); }
+.hero__sub { margin: 18px 0 28px; max-width: 34rem; color: var(--texto-2); font-size: 1.05rem; }
+.hero__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+.preco { margin: 0; color: var(--texto-2); }
+.preco span { font-family: var(--fonte-titulo); font-size: 2rem; font-weight: 700; color: var(--texto); margin-right: 4px; }
+
+/* ============================ Fotos ============================ */
+.foto { margin: 0; border-radius: var(--raio); overflow: hidden; border: 1px solid var(--linha); background: var(--superficie); aspect-ratio: 1; }
+.foto img { width: 100%; height: 100%; object-fit: cover; }
+.foto--hero { aspect-ratio: 4 / 3; box-shadow: 0 30px 80px -30px rgba(47, 123, 255, .45); }
+.foto__vazia {
+  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  color: var(--texto-3); font-size: .9rem; padding: 16px;
+  border: 1px dashed var(--linha-forte); border-radius: inherit;
+  background: repeating-linear-gradient(135deg, transparent 0 14px, rgba(255, 255, 255, .015) 14px 28px);
+}
+
+/* ============================ Seções ============================ */
+.secao { padding: 72px 0; border-bottom: 1px solid var(--linha); }
+.secao--escura { background: var(--superficie); }
+.secao h2::after { content: ""; display: block; width: 48px; height: 3px; background: var(--azul); margin-top: 12px; }
+.secao__sub { margin: 16px 0 32px; color: var(--texto-2); max-width: 36rem; }
+
+.incluso { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.incluso li { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 22px; transition: border-color .2s; }
+.incluso li:hover { border-color: var(--linha-forte); }
+.incluso svg { width: 30px; height: 30px; fill: none; stroke: var(--azul); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 14px; }
+.incluso p { margin: 6px 0 0; color: var(--texto-2); font-size: .95rem; }
+.nota { margin: 24px 0 0; color: var(--texto-3); font-size: .9rem; }
+
+.passos { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 14px; counter-reset: none; }
+.passos li { position: relative; padding: 22px 22px 22px 22px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--preto); }
+.passos__num { display: block; font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 700; color: var(--azul); line-height: 1; margin-bottom: 10px; }
+.passos p { margin: 6px 0 0; color: var(--texto-2); font-size: .95rem; }
+
+.galeria { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ============================ Reservas (tema escuro) ============================ */
+.faixa-reservas {
+  border-bottom: 1px solid var(--linha);
+  background: radial-gradient(50% 60% at 50% 0%, rgba(47, 123, 255, .12), transparent 70%);
+}
+.reservas-slots { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.reservas-slots > p { grid-column: 1 / -1; }
+.reservas-dia { margin: 0; }
+.reservas {
+  --r-cor: var(--azul);
+  --r-cor-texto: var(--texto);
+  --r-cor-suave: var(--texto-2);
+  --r-fundo: var(--superficie);
+  --r-borda: var(--linha-forte);
+  --r-erro: #ff6b6b;
+  --r-raio: var(--raio);
+
+  max-width: 860px;
+  padding: 72px var(--gutter);
+  font-family: var(--fonte);
+  scroll-margin-top: 64px;
+}
+.reservas h2 { font-size: clamp(2rem, 5vw, 2.75rem); text-transform: uppercase; }
+.reservas h3 { font-family: var(--fonte-titulo); font-size: 1.6rem; text-transform: uppercase; }
+.reservas legend { color: var(--texto); }
+.reservas a { color: var(--azul-hover); }
+.reservas input[type="tel"], .reservas textarea { background: var(--preto); color: var(--texto); }
+.reservas input[type="tel"]::placeholder { color: var(--texto-3); }
+.reservas-hora span { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+.reservas-hora span:hover { border-color: var(--azul); }
+.reservas-botao { min-height: 48px; }
+.reservas-qrcode { background: #fff; padding: 12px; border-radius: 8px; width: fit-content; margin: 12px auto; }
+
+/* ============================ Rodapé ============================ */
+.rodape { padding: 40px 0 48px; background: var(--superficie); color: var(--texto-3); font-size: .92rem; }
+.rodape p { margin: 4px 0; }
+.rodape__linha { display: grid; gap: 24px; }
+.marca--rodape { color: var(--texto); }
+.rodape__contato .botao { margin-bottom: 8px; }
+
+/* ============================ Telas maiores ============================ */
+@media (min-width: 720px) {
+  .menu { display: flex; }
+  .topo .botao { margin-left: 0; }
+  .incluso { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .passos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .galeria { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rodape__linha { grid-template-columns: 1fr auto; align-items: end; }
+  .rodape__contato { text-align: right; }
+}
+@media (min-width: 960px) {
+  .hero { padding: 96px 0 104px; }
+  .hero__grade { grid-template-columns: 1.15fr 1fr; gap: 56px; }
+  .incluso { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}

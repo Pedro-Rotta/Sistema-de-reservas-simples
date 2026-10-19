@@ -16,8 +16,6 @@
   line-height: 1.5;
 }
 
-.reservas-pagina { background: #f4f7f6; min-height: 100vh; margin: 0; }
-body { margin: 0; }
 
 .reservas h2 { margin: 0 0 4px; font-size: 1.6rem; }
 .reservas-sub { margin: 0 0 20px; color: var(--r-cor-suave); }
