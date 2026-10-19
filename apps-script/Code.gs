@@ -1,0 +1,307 @@
+/**
+ * Sistema de reservas simples — Google Apps Script (Web App)
+ *
+ * GET  → lista os horários livres
+ * POST → cria uma reserva { data: "yyyy-MM-dd", horario: "HH:mm", telefone: "..." }
+ *
+ * Este script deve ficar vinculado à planilha (Extensões → Apps Script).
+ * Rode a função `setup` uma vez para criar as abas com horários de exemplo.
+ */
+
+const CONFIG = {
+  ABA_HORARIOS: 'Horarios',
+  ABA_RESERVAS: 'Reservas',
+  DIAS_A_FRENTE: 21,          // janela de 3 semanas
+  VALOR_SERVICO: 50,
+  VALOR_SINAL: 20,
+  PIX_CHAVE: '+5518998051878',
+  PIX_NOME: 'PEDRO ROTTA',    // até 25 caracteres, sem acento
+  PIX_CIDADE: 'SAO PAULO',    // até 15 caracteres, sem acento — ajuste para sua cidade
+  FUSO: 'America/Sao_Paulo',
+};
+
+const STATUS = {
+  CONFIRMADA: 'confirmada',
+  AGUARDANDO: 'aguardando sinal',
+  CANCELADA: 'cancelada',
+};
+
+const NOMES_DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
+// Horários de exemplo — troque na aba "Horarios" quando definir os definitivos.
+const HORARIOS_EXEMPLO = [
+  ['terça', '09:00', 'sim'], ['terça', '14:00', 'sim'], ['terça', '17:00', 'sim'],
+  ['quarta', '09:00', 'sim'], ['quarta', '14:00', 'sim'], ['quarta', '17:00', 'sim'],
+  ['quinta', '09:00', 'sim'], ['quinta', '14:00', 'sim'], ['quinta', '17:00', 'sim'],
+];
+
+/* ============================ Web App ============================ */
+
+function doGet() {
+  try {
+    const slots = horariosLivres_();
+    return json_({
+      ok: true,
+      valorServico: CONFIG.VALOR_SERVICO,
+      valorSinal: CONFIG.VALOR_SINAL,
+      slots: slots,
+    });
+  } catch (err) {
+    return json_({ ok: false, erro: 'Erro ao carregar horários.' });
+  }
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+  } catch (err) {
+    return json_({ ok: false, erro: 'Sistema ocupado, tente novamente em instantes.' });
+  }
+  try {
+    const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    return json_(criarReserva_(body));
+  } catch (err) {
+    return json_({ ok: false, erro: 'Não foi possível concluir a reserva.' });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function criarReserva_(body) {
+  const telefone = normalizarTelefone(body.telefone);
+  if (!telefone) return { ok: false, erro: 'Telefone inválido. Use DDD + número.' };
+
+  const data = String(body.data || '');
+  const horario = String(body.horario || '');
+  const livre = horariosLivres_().some(function (s) { return s.data === data && s.horario === horario; });
+  if (!livre) return { ok: false, erro: 'Esse horário não está mais disponível. Escolha outro.' };
+
+  const reservas = lerReservas_();
+  const doCliente = reservas.filter(function (r) { return r.telefone === telefone; });
+  const recorrente = doCliente.some(function (r) { return r.status === STATUS.CONFIRMADA; });
+
+  // Cliente novo só pode segurar um horário enquanto o sinal não é confirmado.
+  if (!recorrente && doCliente.some(function (r) { return r.status === STATUS.AGUARDANDO; })) {
+    return {
+      ok: false,
+      erro: 'Você já tem uma reserva aguardando o sinal. Após a confirmação do Pix, poderá marcar outros horários.',
+    };
+  }
+
+  const status = recorrente ? STATUS.CONFIRMADA : STATUS.AGUARDANDO;
+  const agora = Utilities.formatDate(new Date(), CONFIG.FUSO, 'yyyy-MM-dd HH:mm:ss');
+  abaReservas_().appendRow([data, horario, telefone, status, agora]);
+
+  notificarWhatsApp_(montarMensagem(data, horario, telefone, recorrente));
+
+  const resposta = { ok: true, status: status, recorrente: recorrente, data: data, horario: horario };
+  if (!recorrente) {
+    resposta.pix = {
+      valor: CONFIG.VALOR_SINAL,
+      copiaECola: gerarPix(CONFIG.PIX_CHAVE, CONFIG.VALOR_SINAL, CONFIG.PIX_NOME, CONFIG.PIX_CIDADE),
+    };
+  }
+  return resposta;
+}
+
+/* ============================ Planilha ============================ */
+
+function horariosLivres_() {
+  const hoje = Utilities.formatDate(new Date(), CONFIG.FUSO, 'yyyy-MM-dd');
+  const ocupados = lerReservas_()
+    .filter(function (r) { return r.status !== STATUS.CANCELADA; })
+    .map(function (r) { return r.data + ' ' + r.horario; });
+  return calcularSlots(hoje, lerHorarios_(), ocupados, CONFIG.DIAS_A_FRENTE);
+}
+
+function lerHorarios_() {
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ABA_HORARIOS);
+  const fuso = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  return aba.getDataRange().getValues().slice(1)
+    .filter(function (l) { return l[0] && l[1] && normalizarTexto(l[2]) !== 'nao'; })
+    .map(function (l) {
+      return { diaSemana: diaSemanaIndex(l[0]), horario: celulaHorario_(l[1], fuso) };
+    })
+    .filter(function (h) { return h.diaSemana >= 0 && h.horario; });
+}
+
+function lerReservas_() {
+  const aba = abaReservas_();
+  const fuso = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  return aba.getDataRange().getValues().slice(1)
+    .filter(function (l) { return l[0] && l[1]; })
+    .map(function (l) {
+      return {
+        data: celulaData_(l[0], fuso),
+        horario: celulaHorario_(l[1], fuso),
+        telefone: normalizarTelefone(l[2]) || String(l[2]),
+        status: normalizarTexto(l[3]),
+      };
+    });
+}
+
+function abaReservas_() {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ABA_RESERVAS);
+}
+
+// O Sheets pode converter "2026-10-20" e "09:00" em datas; aqui voltamos para texto.
+function celulaData_(v, fuso) {
+  return v instanceof Date ? Utilities.formatDate(v, fuso, 'yyyy-MM-dd') : String(v).trim();
+}
+
+function celulaHorario_(v, fuso) {
+  if (v instanceof Date) return Utilities.formatDate(v, fuso, 'HH:mm');
+  const m = String(v).trim().match(/^(\d{1,2})[:h](\d{2})$/);
+  return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
+}
+
+/** Rode uma vez pelo editor para criar as abas. Não apaga dados existentes. */
+function setup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  let horarios = ss.getSheetByName(CONFIG.ABA_HORARIOS);
+  if (!horarios) {
+    horarios = ss.insertSheet(CONFIG.ABA_HORARIOS);
+    horarios.getRange('A:C').setNumberFormat('@');
+    horarios.getRange(1, 1, 1, 3).setValues([['Dia da semana', 'Horário', 'Ativo (sim/não)']]).setFontWeight('bold');
+    horarios.getRange(2, 1, HORARIOS_EXEMPLO.length, 3).setValues(HORARIOS_EXEMPLO);
+    horarios.setFrozenRows(1);
+  }
+
+  let reservas = ss.getSheetByName(CONFIG.ABA_RESERVAS);
+  if (!reservas) {
+    reservas = ss.insertSheet(CONFIG.ABA_RESERVAS);
+    reservas.getRange('A:E').setNumberFormat('@');
+    reservas.getRange(1, 1, 1, 5).setValues([['Data', 'Horário', 'Telefone', 'Status', 'Criado em']]).setFontWeight('bold');
+    reservas.setFrozenRows(1);
+    const regra = SpreadsheetApp.newDataValidation()
+      .requireValueInList([STATUS.CONFIRMADA, STATUS.AGUARDANDO, STATUS.CANCELADA], true)
+      .setAllowInvalid(false)
+      .build();
+    reservas.getRange('D2:D').setDataValidation(regra);
+  }
+}
+
+/** Envia uma mensagem de teste no WhatsApp para validar a configuração do CallMeBot. */
+function testarWhatsApp() {
+  notificarWhatsApp_('Teste do sistema de reservas: notificações funcionando!');
+}
+
+/* ============================ WhatsApp ============================ */
+
+function notificarWhatsApp_(texto) {
+  const props = PropertiesService.getScriptProperties();
+  const phone = props.getProperty('CALLMEBOT_PHONE');
+  const apikey = props.getProperty('CALLMEBOT_APIKEY');
+  if (!phone || !apikey) {
+    console.warn('CallMeBot não configurado (CALLMEBOT_PHONE / CALLMEBOT_APIKEY).');
+    return;
+  }
+  const url = 'https://api.callmebot.com/whatsapp.php'
+    + '?phone=' + encodeURIComponent(phone)
+    + '&text=' + encodeURIComponent(texto)
+    + '&apikey=' + encodeURIComponent(apikey);
+  try {
+    const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) console.warn('CallMeBot respondeu ' + res.getResponseCode() + ': ' + res.getContentText());
+  } catch (err) {
+    // A reserva já foi gravada; falha no aviso não deve quebrar o fluxo.
+    console.warn('Falha ao enviar WhatsApp: ' + err);
+  }
+}
+
+/* ============== Funções puras (testadas em tests/test.js) ============== */
+
+function calcularSlots(hojeISO, horarios, ocupados, diasAFrente) {
+  const p = hojeISO.split('-').map(Number);
+  const ocupado = {};
+  ocupados.forEach(function (k) { ocupado[k] = true; });
+  const slots = [];
+  // Começa em 1: reserva permitida só até o dia anterior.
+  for (let i = 1; i <= diasAFrente; i++) {
+    const d = new Date(Date.UTC(p[0], p[1] - 1, p[2] + i));
+    const iso = d.toISOString().slice(0, 10);
+    horarios
+      .filter(function (h) { return h.diaSemana === d.getUTCDay(); })
+      .map(function (h) { return h.horario; })
+      .sort()
+      .forEach(function (horario) {
+        if (!ocupado[iso + ' ' + horario]) slots.push({ data: iso, horario: horario });
+      });
+  }
+  return slots;
+}
+
+function normalizarTexto(v) {
+  return String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+
+function diaSemanaIndex(nome) {
+  const n = normalizarTexto(nome).replace(/-feira$/, '');
+  return NOMES_DIAS.map(normalizarTexto).indexOf(n);
+}
+
+/** Retorna DDD + número (10 ou 11 dígitos) ou '' se inválido. */
+function normalizarTelefone(v) {
+  let d = String(v == null ? '' : v).replace(/\D/g, '');
+  if ((d.length === 12 || d.length === 13) && d.indexOf('55') === 0) d = d.slice(2);
+  if (d.length === 11 && d[2] !== '9') return '';
+  return d.length === 10 || d.length === 11 ? d : '';
+}
+
+function formatarTelefone(d) {
+  return d.length === 11
+    ? '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7)
+    : '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+}
+
+function montarMensagem(dataISO, horario, telefone, recorrente) {
+  const p = dataISO.split('-').map(Number);
+  const dia = NOMES_DIAS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()];
+  const linhas = [
+    recorrente ? '✅ Nova reserva confirmada' : '🆕 NOVO CLIENTE — aguardando sinal de R$ ' + CONFIG.VALOR_SINAL,
+    '📅 ' + dia + ', ' + p[2].toString().padStart(2, '0') + '/' + p[1].toString().padStart(2, '0') + ' às ' + horario,
+    '📞 ' + formatarTelefone(telefone),
+    'https://wa.me/55' + telefone,
+  ];
+  return linhas.join('\n');
+}
+
+/* ----- Pix "copia e cola" (BR Code, padrão EMV do Banco Central) ----- */
+
+function gerarPix(chave, valor, nome, cidade) {
+  const campo = function (id, valor) { return id + ('0' + valor.length).slice(-2) + valor; };
+  const limpar = function (s, max) {
+    return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
+      .replace(/[^A-Z0-9 ]/g, '').trim().slice(0, max);
+  };
+  const payload =
+    campo('00', '01') +
+    campo('26', campo('00', 'br.gov.bcb.pix') + campo('01', chave)) +
+    campo('52', '0000') +
+    campo('53', '986') +
+    campo('54', Number(valor).toFixed(2)) +
+    campo('58', 'BR') +
+    campo('59', limpar(nome, 25)) +
+    campo('60', limpar(cidade, 15)) +
+    campo('62', campo('05', '***')) +
+    '6304';
+  return payload + crc16(payload);
+}
+
+/** CRC16-CCITT (polinômio 0x1021, inicial 0xFFFF), exigido pelo BR Code. */
+function crc16(str) {
+  let crc = 0xffff;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let b = 0; b < 8; b++) {
+      crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}

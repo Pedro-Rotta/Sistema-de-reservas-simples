@@ -2,6 +2,19 @@
 
 Sistema de reservas de horários para a landing page, sem backend completo: página estática + Google Sheets + Google Apps Script, com notificação no WhatsApp via CallMeBot.
 
+## Estrutura
+
+```
+apps-script/Code.gs      → backend (Google Apps Script, Web App GET/POST)
+web/index.html           → página de reservas
+web/reservas.js          → lógica da página (configure a URL do Web App aqui)
+web/reservas.css         → estilos (cores em variáveis no topo)
+docs/CONFIGURACAO.md     → passo a passo: planilha, CallMeBot, deploy e hospedagem
+tests/test.js            → testes do Code.gs com planilha simulada (node tests/test.js)
+```
+
+**Para colocar no ar, siga [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md).**
+
 ## Contexto
 
 Tenho uma landing page com minhas informações e quero adicionar reservas de horários.
@@ -49,11 +62,11 @@ CSV no servidor foi descartado: site estático não consegue gravar arquivo, hav
 
 ## Pendências
 
-- [ ] Definir os horários exatos de cada dia (terça a quinta)
+- [ ] Definir os horários exatos de cada dia (terça a quinta) — hoje estão os de exemplo: 09:00, 14:00 e 17:00
 - [x] Criar o repositório do projeto
 
 ## Entregáveis
 
-1. [ ] Código do Google Apps Script
-2. [ ] Página de reservas (HTML/JS) integrada à landing page
-3. [ ] Passo a passo de configuração: planilha, deploy do Apps Script, ativação do CallMeBot e hospedagem
+1. [x] Código do Google Apps Script
+2. [x] Página de reservas (HTML/JS) integrada à landing page
+3. [x] Passo a passo de configuração: planilha, deploy do Apps Script, ativação do CallMeBot e hospedagem

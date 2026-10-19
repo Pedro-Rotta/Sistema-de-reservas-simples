@@ -1,0 +1,91 @@
+/* Estilos do bloco de reservas. Ajuste as variáveis para combinar com a landing page. */
+.reservas {
+  --r-cor: #1f6f5c;
+  --r-cor-texto: #1d2321;
+  --r-cor-suave: #5d6964;
+  --r-fundo: #ffffff;
+  --r-borda: #d9e0dd;
+  --r-erro: #b3261e;
+  --r-raio: 10px;
+
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  color: var(--r-cor-texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.reservas-pagina { background: #f4f7f6; min-height: 100vh; margin: 0; }
+body { margin: 0; }
+
+.reservas h2 { margin: 0 0 4px; font-size: 1.6rem; }
+.reservas-sub { margin: 0 0 20px; color: var(--r-cor-suave); }
+
+.reservas fieldset {
+  border: 1px solid var(--r-borda);
+  border-radius: var(--r-raio);
+  background: var(--r-fundo);
+  padding: 16px;
+  margin: 0 0 16px;
+}
+.reservas legend { font-weight: 600; padding: 0 6px; }
+
+.reservas-dia { margin: 0 0 14px; }
+.reservas-dia:last-child { margin-bottom: 0; }
+.reservas-dia h4 { margin: 0 0 8px; font-size: .95rem; text-transform: capitalize; }
+.reservas-horas { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.reservas-hora input { position: absolute; opacity: 0; pointer-events: none; }
+.reservas-hora span {
+  display: inline-block;
+  min-width: 72px;
+  padding: 8px 12px;
+  text-align: center;
+  border: 1px solid var(--r-borda);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+.reservas-hora input:checked + span { background: var(--r-cor); border-color: var(--r-cor); color: #fff; }
+.reservas-hora input:focus-visible + span { outline: 2px solid var(--r-cor); outline-offset: 2px; }
+
+.reservas-label { display: block; font-size: .9rem; margin-bottom: 6px; color: var(--r-cor-suave); }
+.reservas input[type="tel"], .reservas textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font: inherit;
+  border: 1px solid var(--r-borda);
+  border-radius: 8px;
+}
+.reservas textarea { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; resize: none; word-break: break-all; }
+
+.reservas-botao {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--r-cor);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.reservas-botao:disabled { opacity: .5; cursor: not-allowed; }
+.reservas-botao--sec { margin-top: 8px; background: transparent; color: var(--r-cor); border: 1px solid var(--r-cor); }
+
+.reservas-link { margin-top: 16px; background: none; border: 0; color: var(--r-cor); font: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+.reservas-erro { color: var(--r-erro); margin: 0 0 12px; }
+.reservas-info { color: var(--r-cor-suave); font-size: .9rem; margin: 8px 0 0; }
+
+.reservas-resultado {
+  border: 1px solid var(--r-borda);
+  border-radius: var(--r-raio);
+  background: var(--r-fundo);
+  padding: 20px 16px;
+}
+.reservas-resultado h3 { margin: 0 0 6px; }
+.reservas-pix { margin-top: 12px; }
+.reservas-qrcode { display: flex; justify-content: center; margin: 12px 0; }
+.reservas-qrcode img, .reservas-qrcode canvas { max-width: 220px; height: auto; }

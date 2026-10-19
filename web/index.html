@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservar horário</title>
+  <link rel="stylesheet" href="reservas.css">
+</head>
+<body>
+  <main class="reservas-pagina">
+    <!-- Bloco de reservas: copie daqui até o fim da <section> para a sua landing page -->
+    <section id="reservas" class="reservas">
+      <h2>Reserve seu horário</h2>
+      <p class="reservas-sub">Atendimento de terça a quinta. Valor do serviço: <strong data-valor-servico>R$ 50</strong>.</p>
+
+      <form id="reservas-form" class="reservas-form" novalidate>
+        <fieldset>
+          <legend>1. Escolha um horário</legend>
+          <div id="reservas-slots" class="reservas-slots" aria-live="polite">
+            <p class="reservas-info">Carregando horários…</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Informe seu WhatsApp</legend>
+          <label for="reservas-telefone" class="reservas-label">Telefone com DDD</label>
+          <input id="reservas-telefone" name="telefone" type="tel" inputmode="numeric"
+                 autocomplete="tel-national" placeholder="(18) 99999-9999" maxlength="15" required>
+        </fieldset>
+
+        <p id="reservas-erro" class="reservas-erro" role="alert" hidden></p>
+        <button id="reservas-botao" type="submit" class="reservas-botao" disabled>Reservar</button>
+      </form>
+
+      <div id="reservas-resultado" class="reservas-resultado" hidden>
+        <h3 id="reservas-titulo"></h3>
+        <p id="reservas-detalhe"></p>
+
+        <div id="reservas-pix" class="reservas-pix" hidden>
+          <p>Para garantir o horário na sua primeira reserva, pague o sinal de
+            <strong id="reservas-pix-valor">R$ 20,00</strong> via Pix. O restante é pago no atendimento.</p>
+          <div id="reservas-qrcode" class="reservas-qrcode" aria-label="QR code do Pix"></div>
+          <label for="reservas-copia-cola" class="reservas-label">Pix copia e cola</label>
+          <textarea id="reservas-copia-cola" rows="3" readonly></textarea>
+          <button id="reservas-copiar" type="button" class="reservas-botao reservas-botao--sec">Copiar código Pix</button>
+          <p class="reservas-info">Seu horário fica reservado enquanto confirmamos o pagamento.</p>
+        </div>
+
+        <button id="reservas-nova" type="button" class="reservas-link">Fazer outra reserva</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="reservas.js"></script>
+</body>
+</html>
