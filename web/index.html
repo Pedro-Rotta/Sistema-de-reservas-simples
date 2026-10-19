@@ -223,46 +223,113 @@
         <p class="secao__sub">Todos os valores já incluem o atendimento na sua casa.</p>
 
         <!-- EDITAR: confira o que entra em cada tipo de lavagem -->
-        <div class="precos">
-          <article class="preco-card">
-            <h3>Lavagem externa</h3>
-            <p class="preco-card__valor"><small>R$</small>30</p>
-            <ul>
-              <li>Carroceria lavada e seca</li>
-              <li>Vidros por fora</li>
-              <li>Rodas e pneus lavados</li>
-            </ul>
-          </article>
-
-          <article class="preco-card">
-            <h3>Lavagem interna</h3>
-            <p class="preco-card__valor"><small>R$</small>35</p>
-            <ul>
-              <li>Aspiração de bancos, tapetes e assoalho</li>
-              <li>Painel, portas e plásticos limpos</li>
-              <li>Vidros por dentro</li>
-            </ul>
-          </article>
-
-          <article class="preco-card preco-card--destaque">
-            <p class="preco-card__selo">Interna + externa</p>
-            <h3>Lavagem completa</h3>
-            <p class="preco-card__valor"><small>R$</small>60</p>
-            <ul>
-              <li>Tudo da lavagem externa</li>
-              <li>Tudo da lavagem interna</li>
-              <li>R$ 10 a menos que as duas separadas</li>
-            </ul>
-          </article>
-        </div>
-
-        <div class="adicional">
-          <p class="adicional__tag">Adicional</p>
-          <div class="adicional__texto">
-            <h3>Limpeza detalhada dos pneus</h3>
-            <p>Izer nas rodas, pneus esfregados com cuidado e Pneu Pretinho para fechar.</p>
+        <div class="tipo-veiculo">
+          <input type="radio" name="veiculo" id="veiculo-carro" checked>
+          <input type="radio" name="veiculo" id="veiculo-camionete">
+          <div class="tipo-veiculo__opcoes" role="group" aria-label="Tipo de veículo">
+            <label for="veiculo-carro">Carro</label>
+            <label for="veiculo-camionete">Camionete</label>
           </div>
-          <p class="adicional__valor">+ R$ 15</p>
+
+          <div class="tabela-precos tabela-precos--carro">
+          <div class="precos">
+            <article class="preco-card">
+              <h3>Lavagem externa</h3>
+              <p class="preco-card__valor"><small>R$</small>30</p>
+              <ul>
+                <li>Carroceria lavada e seca</li>
+                <li>Vidros por fora</li>
+                <li>Rodas e pneus lavados</li>
+              </ul>
+            </article>
+
+            <article class="preco-card">
+              <h3>Lavagem interna</h3>
+              <p class="preco-card__valor"><small>R$</small>35</p>
+              <ul>
+                <li>Aspiração de bancos, tapetes e assoalho</li>
+                <li>Painel, portas e plásticos limpos</li>
+                <li>Vidros por dentro</li>
+              </ul>
+            </article>
+
+            <article class="preco-card preco-card--destaque">
+              <p class="preco-card__selo">Interna + externa</p>
+              <h3>Lavagem completa</h3>
+              <p class="preco-card__valor"><small>R$</small>60</p>
+              <ul>
+                <li>Tudo da lavagem externa</li>
+                <li>Tudo da lavagem interna</li>
+                <li>Você economiza R$5</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="adicional">
+            <p class="adicional__tag">Adicional</p>
+            <ul class="adicional__lista">
+              <li>
+                <div class="adicional__texto">
+                  <h3>Pneus detalhados, plásticos renovados e vidros tratados</h3>
+                  <p>Izer nos discos, pneus esfregados com cuidado e Pneu Pretinho.</p>
+                  <p>Intense nos plásticos internos para devolver a cor e o aspecto de novo.</p>
+                  <p>Glazy nos vidros: ajuda a água a escorrer em vez de ficar parada em contato com o vidro.</p>
+                </div>
+                <p class="adicional__valor">+ R$ 15</p>
+              </li>
+            </ul>
+          </div>
+          </div>
+
+          <div class="tabela-precos tabela-precos--camionete">
+          <div class="precos">
+            <article class="preco-card">
+              <h3>Lavagem externa</h3>
+              <p class="preco-card__valor"><small>R$</small>45</p>
+              <ul>
+                <li>Carroceria lavada e seca</li>
+                <li>Vidros por fora</li>
+                <li>Rodas e pneus lavados</li>
+              </ul>
+            </article>
+
+            <article class="preco-card">
+              <h3>Lavagem interna</h3>
+              <p class="preco-card__valor"><small>R$</small>50</p>
+              <ul>
+                <li>Aspiração de bancos, tapetes e assoalho</li>
+                <li>Painel, portas e plásticos limpos</li>
+                <li>Vidros por dentro</li>
+              </ul>
+            </article>
+
+            <article class="preco-card preco-card--destaque">
+              <p class="preco-card__selo">Interna + externa</p>
+              <h3>Lavagem completa</h3>
+              <p class="preco-card__valor"><small>R$</small>90</p>
+              <ul>
+                <li>Tudo da lavagem externa</li>
+                <li>Tudo da lavagem interna</li>
+                <li>Você economiza R$5</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="adicional">
+            <p class="adicional__tag">Adicional</p>
+            <ul class="adicional__lista">
+              <li>
+                <div class="adicional__texto">
+                  <h3>Pneus detalhados, plásticos renovados e vidros tratados</h3>
+                  <p>Izer nos discos, pneus esfregados com cuidado e Pneu Pretinho.</p>
+                  <p>Intense nos plásticos internos para devolver a cor e o aspecto de novo.</p>
+                  <p>Glazy nos vidros: ajuda a água a escorrer em vez de ficar parada em contato com o vidro.</p>
+                </div>
+                <p class="adicional__valor">+ R$ 20</p>
+              </li>
+            </ul>
+          </div>
+          </div>
         </div>
       </div>
     </section>

@@ -170,6 +170,24 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .galeria { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* ============================ Tabela de preços ============================ */
+.tipo-veiculo { position: relative; }
+.tipo-veiculo > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.tipo-veiculo__opcoes {
+  display: inline-flex; margin-bottom: 28px; padding: 4px;
+  border: 1px solid var(--linha-forte); border-radius: 999px; background: var(--preto);
+}
+.tipo-veiculo__opcoes label {
+  min-width: 120px; padding: 10px 20px; border-radius: 999px; text-align: center; cursor: pointer;
+  font-weight: 600; color: var(--texto-2); transition: background .2s, color .2s;
+}
+.tipo-veiculo__opcoes label:hover { color: var(--texto); }
+#veiculo-carro:checked ~ .tipo-veiculo__opcoes label[for="veiculo-carro"],
+#veiculo-camionete:checked ~ .tipo-veiculo__opcoes label[for="veiculo-camionete"] { background: var(--azul); color: #fff; }
+#veiculo-carro:focus-visible ~ .tipo-veiculo__opcoes label[for="veiculo-carro"],
+#veiculo-camionete:focus-visible ~ .tipo-veiculo__opcoes label[for="veiculo-camionete"] { outline: 2px solid var(--azul); outline-offset: 3px; }
+#veiculo-carro:checked ~ .tabela-precos--camionete,
+#veiculo-camionete:checked ~ .tabela-precos--carro { display: none; }
+
 .precos { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
 .preco-card {
   position: relative;
@@ -197,11 +215,13 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 }
 
 .adicional {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px 20px; align-items: center;
   margin-top: 14px; padding: 20px 24px;
   border: 1px dashed var(--linha-forte); border-radius: var(--raio);
 }
-.adicional__tag { grid-column: 1 / -1; margin: 0; font-size: .75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--azul-hover); }
+.adicional__tag { margin: 0 0 10px; font-size: .75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--azul-hover); }
+.adicional__lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.adicional__lista li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 20px; align-items: center; }
+.adicional__lista li + li { padding-top: 14px; border-top: 1px solid var(--linha); }
 .adicional h3 { font-size: 1.3rem; text-transform: uppercase; }
 .adicional__texto p { margin: 4px 0 0; color: var(--texto-2); font-size: .95rem; }
 .adicional__valor { margin: 0; font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 700; color: var(--azul); white-space: nowrap; }
@@ -288,7 +308,7 @@ h3 { font-size: 1.35rem; font-weight: 600; }
   .hero__grade { grid-template-columns: 1.15fr 1fr; gap: 56px; }
   .incluso { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .precos { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
-  .adicional { grid-template-columns: minmax(0, 1fr) auto; }
+  .adicional__lista li { grid-template-columns: minmax(0, 1fr) auto; }
   .passos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
