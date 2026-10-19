@@ -51,7 +51,7 @@
           <div class="hero__acoes">
             <a class="preco-destaque" href="#precos">
               <span class="preco-destaque__rotulo">A partir de</span>
-              <span class="preco-destaque__valor"><small>R$</small>35</span>
+              <span class="preco-destaque__valor"><small>R$</small>30</span>
               <span class="preco-destaque__link">Ver tabela de preços →</span>
             </a>
           </div>
@@ -207,7 +207,7 @@
           <li>
             <span class="passos__num">04</span>
             <h3>Eu vou até você</h3>
-            <p>No horário marcado, chego no seu endereço e lavo o carro aí mesmo.</p>
+            <p>Não se preocupe com trânsito nem com atraso</p>
             <!-- EDITAR: se precisar de algo do cliente (água, tomada, vaga), diga aqui -->
           </li>
         </ol>
@@ -218,15 +218,52 @@
     <section id="precos" class="secao secao--escura">
       <div class="container">
         <h2>Tabela de preços</h2>
-        <!-- EDITAR: a tabela completa entra aqui depois -->
-        <div class="banner-preco">
-          <div>
-            <p class="banner-preco__rotulo">Lavagem completa na sua casa</p>
-            <p class="banner-preco__desc">Por dentro e por fora, com os produtos listados acima.</p>
-          </div>
-          <p class="banner-preco__valor">R$ 65</p>
-          <a class="botao" href="#reservas">Reservar horário</a>
+        <p class="secao__sub">Todos os valores já incluem o atendimento na sua casa.</p>
+
+        <!-- EDITAR: confira o que entra em cada tipo de lavagem -->
+        <div class="precos">
+          <article class="preco-card">
+            <h3>Lavagem externa</h3>
+            <p class="preco-card__valor"><small>R$</small>30</p>
+            <ul>
+              <li>Carroceria lavada e seca</li>
+              <li>Vidros por fora</li>
+              <li>Rodas e pneus lavados</li>
+            </ul>
+          </article>
+
+          <article class="preco-card">
+            <h3>Lavagem interna</h3>
+            <p class="preco-card__valor"><small>R$</small>35</p>
+            <ul>
+              <li>Aspiração de bancos, tapetes e assoalho</li>
+              <li>Painel, portas e plásticos limpos</li>
+              <li>Vidros por dentro</li>
+            </ul>
+          </article>
+
+          <article class="preco-card preco-card--destaque">
+            <p class="preco-card__selo">Interna + externa</p>
+            <h3>Lavagem completa</h3>
+            <p class="preco-card__valor"><small>R$</small>60</p>
+            <ul>
+              <li>Tudo da lavagem externa</li>
+              <li>Tudo da lavagem interna</li>
+              <li>R$ 10 a menos que as duas separadas</li>
+            </ul>
+          </article>
         </div>
+
+        <div class="adicional">
+          <p class="adicional__tag">Adicional</p>
+          <div class="adicional__texto">
+            <h3>Limpeza detalhada dos pneus</h3>
+            <p>Izer nas rodas, pneus esfregados com cuidado e Pneu Pretinho para fechar.</p>
+          </div>
+          <p class="adicional__valor">+ R$ 15</p>
+        </div>
+
+        <p class="precos__acao"><a class="botao" href="#reservas">Reservar horário</a></p>
       </div>
     </section>
 
@@ -234,8 +271,6 @@
     <div class="faixa-reservas">
     <section id="reservas" class="reservas">
       <h2>Reserve seu horário</h2>
-      <p class="reservas-sub">Atendimento de terça a quinta. Valor do serviço: <strong data-valor-servico>R$ 50</strong>.</p>
-
       <form id="reservas-form" class="reservas-form" novalidate>
         <fieldset>
           <legend>1. Escolha um horário</legend>
@@ -271,6 +306,14 @@
 
         <button id="reservas-nova" type="button" class="reservas-link">Fazer outra reserva</button>
       </div>
+
+      <div class="horario-especial">
+        <div>
+          <p class="horario-especial__titulo">Consulte horário especial</p>
+          <p>Precisa de outro dia ou horário? Fale comigo no WhatsApp.</p>
+        </div>
+        <a class="botao botao--contorno botao--whatsapp" href="https://wa.me/5518998051878?text=Ol%C3%A1!%20Gostaria%20de%20consultar%20um%20hor%C3%A1rio%20especial%20para%20lavagem." target="_blank" rel="noopener"><svg class="icone-whatsapp" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> Chamar no WhatsApp</a>
+      </div>
     </section>
     </div>
 
@@ -294,10 +337,10 @@
       <div>
         <p class="marca marca--rodape"><span class="marca__ponto" aria-hidden="true"></span> Pedro Rotta</p>
         <p>Lavagem automotiva em domicílio</p>
-        <p>Atendo no seu endereço em Presidente Prudente</p>
+        <p>Atendo no seu endereço em Presidente Prudente e Álvares Machado</p>
       </div>
       <div class="rodape__contato">
-        <a class="botao botao--contorno" href="https://wa.me/5518998051878" target="_blank" rel="noopener">WhatsApp (18) 99805-1878</a>
+        <a class="botao botao--contorno botao--whatsapp" href="https://wa.me/5518998051878" target="_blank" rel="noopener"><svg class="icone-whatsapp" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> (18) 99805-1878</a>
         <p>Terça a quinta, com hora marcada</p>
       </div>
     </div>
