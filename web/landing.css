@@ -207,6 +207,13 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .adicional__valor { margin: 0; font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 700; color: var(--azul); white-space: nowrap; }
 .precos__acao { margin: 28px 0 0; text-align: center; }
 
+/* ============================ Disponibilidade no local ============================ */
+.no-local { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.no-local li { display: flex; gap: 18px; align-items: flex-start; padding: 22px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--superficie); }
+.no-local svg { width: 40px; height: 40px; flex: none; padding: 8px; border-radius: 10px; background: var(--azul-suave); fill: none; stroke: var(--azul-hover); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.no-local h3 { font-size: 1.4rem; text-transform: uppercase; }
+.no-local p { margin: 6px 0 0; color: var(--texto-2); font-size: .95rem; }
+
 /* ============================ Reservas (tema escuro) ============================ */
 .faixa-reservas {
   border-bottom: 1px solid var(--linha);
@@ -264,6 +271,7 @@ h3 { font-size: 1.35rem; font-weight: 600; }
   .menu { display: flex; }
   .topo .botao { margin-left: 0; }
   .incluso { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .no-local { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .passos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .produtos__grupo--largo { grid-column: 1 / -1; }
