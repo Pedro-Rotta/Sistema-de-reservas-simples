@@ -128,9 +128,18 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .nota { margin: 24px 0 0; color: var(--texto-3); font-size: .9rem; }
 
 .passos { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 14px; counter-reset: none; }
-.passos li { position: relative; padding: 22px 22px 22px 22px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--preto); }
+.passos li { position: relative; padding: 22px 22px 22px 22px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--superficie); }
 .passos__num { display: block; font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 700; color: var(--azul); line-height: 1; margin-bottom: 10px; }
 .passos p { margin: 6px 0 0; color: var(--texto-2); font-size: .95rem; }
+
+.produtos { display: grid; gap: 14px; }
+.produtos__grupo { background: var(--preto); border: 1px solid var(--linha); border-radius: var(--raio); padding: 22px; }
+.produtos__grupo h3 { font-size: .85rem; font-family: var(--fonte); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--azul-hover); margin-bottom: 14px; }
+.produtos__grupo ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.produtos__grupo li + li { border-top: 1px solid var(--linha); padding-top: 16px; }
+.produtos__grupo p { margin: 4px 0 0; color: var(--texto-2); font-size: .95rem; }
+.produtos__grupo .produto__nome { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0; color: var(--texto); font-family: var(--fonte-titulo); font-size: 1.5rem; font-weight: 700; text-transform: uppercase; }
+.produto__tag { font-family: var(--fonte); font-size: .72rem; font-weight: 600; letter-spacing: .5px; text-transform: none; color: var(--azul-hover); background: var(--azul-suave); border: 1px solid rgba(47, 123, 255, .35); border-radius: 999px; padding: 2px 10px; }
 
 .galeria { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -180,6 +189,7 @@ h3 { font-size: 1.35rem; font-weight: 600; }
   .topo .botao { margin-left: 0; }
   .incluso { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .passos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .galeria { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rodape__linha { grid-template-columns: 1fr auto; align-items: end; }
   .rodape__contato { text-align: right; }
