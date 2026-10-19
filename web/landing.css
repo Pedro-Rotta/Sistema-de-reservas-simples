@@ -132,7 +132,7 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .passos__num { display: block; font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 700; color: var(--azul); line-height: 1; margin-bottom: 10px; }
 .passos p { margin: 6px 0 0; color: var(--texto-2); font-size: .95rem; }
 
-.produtos { display: grid; gap: 14px; }
+.produtos { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
 .produtos__grupo { background: var(--preto); border: 1px solid var(--linha); border-radius: var(--raio); padding: 22px; }
 .produtos__grupo h3 { font-size: .85rem; font-family: var(--fonte); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--azul-hover); margin-bottom: 14px; }
 .produtos__grupo ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
@@ -203,4 +203,27 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition: none !important; }
+}
+
+/* ============================ Fotos dos produtos ============================ */
+.produtos__grupo li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 16px; align-items: center; }
+.produto__foto {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #1d2a3d, var(--superficie-2) 70%);
+  border: 1px solid var(--linha);
+}
+.produto__foto img { position: relative; width: 100%; height: 100%; object-fit: contain; padding: 6px; background: #fff; }
+.produto__foto:has(img) { background: #fff; border-color: transparent; }
+/* Espaço reservado enquanto a foto não é colocada */
+.produto__foto::before {
+  content: attr(data-nome);
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 6px; font-size: .68rem; line-height: 1.2; color: var(--texto-3);
+}
+@media (min-width: 720px) {
+  .produtos__grupo li { grid-template-columns: 92px minmax(0, 1fr); }
 }
