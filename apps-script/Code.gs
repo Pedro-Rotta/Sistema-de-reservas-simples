@@ -15,9 +15,10 @@ const CONFIG = {
   VALOR_SERVICO: 50,
   VALOR_SINAL: 20,
   PIX_CHAVE: '+5518998051878',
-  PIX_NOME: 'PEDRO ROTTA',    // até 25 caracteres, sem acento
-  PIX_CIDADE: 'SAO PAULO',    // até 15 caracteres, sem acento — ajuste para sua cidade
+  PIX_NOME: 'PEDRO AUGUSTO ROTTA',    // até 25 caracteres, sem acento
+  PIX_CIDADE: 'PRESIDENTE PRUDENTE',    // até 15 caracteres, sem acento — ajuste para sua cidade
   FUSO: 'America/Sao_Paulo',
+  EMAIL_AVISO: 'pedrorotta2006@gmail.com', // recebe um e-mail a cada reserva ('' para desligar)
 };
 
 const STATUS = {
@@ -28,12 +29,58 @@ const STATUS = {
 
 const NOMES_DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
-// Horários de exemplo — troque na aba "Horarios" quando definir os definitivos.
+// Horários iniciais da aba "Horarios". Cada linha é uma janela de atendimento (início-fim).
 const HORARIOS_EXEMPLO = [
-  ['terça', '09:00', 'sim'], ['terça', '14:00', 'sim'], ['terça', '17:00', 'sim'],
-  ['quarta', '09:00', 'sim'], ['quarta', '14:00', 'sim'], ['quarta', '17:00', 'sim'],
-  ['quinta', '09:00', 'sim'], ['quinta', '14:00', 'sim'], ['quinta', '17:00', 'sim'],
+  ['terça', '08:00-11:00', 'sim'], ['terça', '13:00-16:00', 'sim'],
+  ['quarta', '08:00-11:00', 'sim'], ['quarta', '13:00-16:00', 'sim'],
+  ['quinta', '08:00-11:00', 'sim'], ['quinta', '13:00-16:00', 'sim'],
 ];
+
+// Colunas da aba "Reservas" (Nome e Endereço ficam no fim para não mexer nas primeiras).
+const CABECALHO_RESERVAS = ['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço'];
+
+/* ============================ Configuração ============================ */
+
+/** Rode uma vez pelo editor para criar as abas. Não apaga dados existentes. */
+function setup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw new Error('Este script não está ligado a uma planilha. Abra a planilha e use Extensões → Apps Script.');
+  const feito = [];
+
+  let horarios = ss.getSheetByName(CONFIG.ABA_HORARIOS);
+  if (!horarios) {
+    horarios = ss.insertSheet(CONFIG.ABA_HORARIOS);
+    horarios.getRange('A:C').setNumberFormat('@');
+    horarios.getRange(1, 1, 1, 3).setValues([['Dia da semana', 'Horário', 'Ativo (sim/não)']]).setFontWeight('bold');
+    horarios.getRange(2, 1, HORARIOS_EXEMPLO.length, 3).setValues(HORARIOS_EXEMPLO);
+    horarios.setFrozenRows(1);
+    feito.push('aba Horarios criada');
+  } else {
+    feito.push('aba Horarios já existia');
+  }
+
+  let reservas = ss.getSheetByName(CONFIG.ABA_RESERVAS);
+  if (!reservas) {
+    reservas = ss.insertSheet(CONFIG.ABA_RESERVAS);
+    reservas.getRange('A:G').setNumberFormat('@');
+    reservas.getRange(1, 1, 1, CABECALHO_RESERVAS.length).setValues([CABECALHO_RESERVAS]).setFontWeight('bold');
+    reservas.setFrozenRows(1);
+    const regra = SpreadsheetApp.newDataValidation()
+      .requireValueInList([STATUS.CONFIRMADA, STATUS.AGUARDANDO, STATUS.CANCELADA], true)
+      .setAllowInvalid(false)
+      .build();
+    reservas.getRange('D2:D').setDataValidation(regra);
+    feito.push('aba Reservas criada');
+  } else {
+    feito.push('aba Reservas já existia');
+  }
+
+  const resumo = 'Planilha "' + ss.getName() + '": ' + feito.join(', ') + '. Abas atuais: ' +
+    ss.getSheets().map(function (a) { return a.getName(); }).join(', ');
+  console.log(resumo);
+  console.log('Endereço da planilha: ' + ss.getUrl());
+  ss.toast(feito.join(', '), 'Sistema de reservas', 10);
+}
 
 /* ============================ Web App ============================ */
 
@@ -47,6 +94,7 @@ function doGet() {
       slots: slots,
     });
   } catch (err) {
+    console.error('doGet: ' + err);
     return json_({ ok: false, erro: 'Erro ao carregar horários.' });
   }
 }
@@ -62,6 +110,7 @@ function doPost(e) {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     return json_(criarReserva_(body));
   } catch (err) {
+    console.error('doPost: ' + err);
     return json_({ ok: false, erro: 'Não foi possível concluir a reserva.' });
   } finally {
     lock.releaseLock();
@@ -71,9 +120,13 @@ function doPost(e) {
 function criarReserva_(body) {
   const telefone = normalizarTelefone(body.telefone);
   if (!telefone) return { ok: false, erro: 'Telefone inválido. Use DDD + número.' };
+  const nome = limparTextoLivre(body.nome, 60);
+  if (nome.length < 2) return { ok: false, erro: 'Informe seu nome.' };
+  const endereco = limparTextoLivre(body.endereco, 150);
+  if (endereco.length < 5) return { ok: false, erro: 'Informe o endereço com rua, número e bairro.' };
 
   const data = String(body.data || '');
-  const horario = String(body.horario || '');
+  const horario = normalizarHorario(body.horario);
   const livre = horariosLivres_().some(function (s) { return s.data === data && s.horario === horario; });
   if (!livre) return { ok: false, erro: 'Esse horário não está mais disponível. Escolha outro.' };
 
@@ -91,9 +144,11 @@ function criarReserva_(body) {
 
   const status = recorrente ? STATUS.CONFIRMADA : STATUS.AGUARDANDO;
   const agora = Utilities.formatDate(new Date(), CONFIG.FUSO, 'yyyy-MM-dd HH:mm:ss');
-  abaReservas_().appendRow([data, horario, telefone, status, agora]);
+  abaReservas_().appendRow([data, horario, telefone, status, agora, protegerCelula(nome), protegerCelula(endereco)]);
 
-  notificarWhatsApp_(montarMensagem(data, horario, telefone, recorrente));
+  avisarReserva_({
+    data: data, horario: horario, telefone: telefone, nome: nome, endereco: endereco, recorrente: recorrente,
+  });
 
   const resposta = { ok: true, status: status, recorrente: recorrente, data: data, horario: horario };
   if (!recorrente) {
@@ -152,35 +207,7 @@ function celulaData_(v, fuso) {
 
 function celulaHorario_(v, fuso) {
   if (v instanceof Date) return Utilities.formatDate(v, fuso, 'HH:mm');
-  const m = String(v).trim().match(/^(\d{1,2})[:h](\d{2})$/);
-  return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
-}
-
-/** Rode uma vez pelo editor para criar as abas. Não apaga dados existentes. */
-function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  let horarios = ss.getSheetByName(CONFIG.ABA_HORARIOS);
-  if (!horarios) {
-    horarios = ss.insertSheet(CONFIG.ABA_HORARIOS);
-    horarios.getRange('A:C').setNumberFormat('@');
-    horarios.getRange(1, 1, 1, 3).setValues([['Dia da semana', 'Horário', 'Ativo (sim/não)']]).setFontWeight('bold');
-    horarios.getRange(2, 1, HORARIOS_EXEMPLO.length, 3).setValues(HORARIOS_EXEMPLO);
-    horarios.setFrozenRows(1);
-  }
-
-  let reservas = ss.getSheetByName(CONFIG.ABA_RESERVAS);
-  if (!reservas) {
-    reservas = ss.insertSheet(CONFIG.ABA_RESERVAS);
-    reservas.getRange('A:E').setNumberFormat('@');
-    reservas.getRange(1, 1, 1, 5).setValues([['Data', 'Horário', 'Telefone', 'Status', 'Criado em']]).setFontWeight('bold');
-    reservas.setFrozenRows(1);
-    const regra = SpreadsheetApp.newDataValidation()
-      .requireValueInList([STATUS.CONFIRMADA, STATUS.AGUARDANDO, STATUS.CANCELADA], true)
-      .setAllowInvalid(false)
-      .build();
-    reservas.getRange('D2:D').setDataValidation(regra);
-  }
+  return normalizarHorario(v);
 }
 
 /** Envia uma mensagem de teste no WhatsApp para validar a configuração do CallMeBot. */
@@ -188,7 +215,28 @@ function testarWhatsApp() {
   notificarWhatsApp_('Teste do sistema de reservas: notificações funcionando!');
 }
 
-/* ============================ WhatsApp ============================ */
+/** Envia um e-mail de teste para CONFIG.EMAIL_AVISO (na 1ª vez o Google pede autorização). */
+function testarEmail() {
+  notificarEmail_('Teste do sistema de reservas', 'Avisos por e-mail funcionando!');
+}
+
+/* ============================ Avisos ============================ */
+
+function avisarReserva_(r) {
+  const texto = montarMensagem(r);
+  notificarWhatsApp_(texto);
+  notificarEmail_(montarAssunto(r), texto);
+}
+
+function notificarEmail_(assunto, texto) {
+  if (!CONFIG.EMAIL_AVISO) return;
+  try {
+    MailApp.sendEmail({ to: CONFIG.EMAIL_AVISO, subject: assunto, body: texto, name: 'Sistema de reservas' });
+  } catch (err) {
+    // A reserva já foi gravada; falha no aviso não deve quebrar o fluxo.
+    console.warn('Falha ao enviar e-mail: ' + err);
+  }
+}
 
 function notificarWhatsApp_(texto) {
   const props = PropertiesService.getScriptProperties();
@@ -242,6 +290,31 @@ function diaSemanaIndex(nome) {
   return NOMES_DIAS.map(normalizarTexto).indexOf(n);
 }
 
+/** "8:00", "08h00", "08:00-11:00", "8:00 às 11:00" → "08:00" ou "08:00-11:00"; '' se inválido. */
+function normalizarHorario(v) {
+  const hora = function (h, m) { return ('0' + h).slice(-2) + ':' + m; };
+  const t = String(v == null ? '' : v).trim().toLowerCase();
+  const m = t.match(/^(\d{1,2})[:h](\d{2})(?:\s*(?:-|–|às|as|a)\s*(\d{1,2})[:h](\d{2}))?$/);
+  if (!m) return '';
+  return m[3] ? hora(m[1], m[2]) + '-' + hora(m[3], m[4]) : hora(m[1], m[2]);
+}
+
+/** "08:00-11:00" → "das 08:00 às 11:00"; "09:00" → "às 09:00". */
+function descreverHorario(horario) {
+  const p = horario.split('-');
+  return p.length === 2 ? 'das ' + p[0] + ' às ' + p[1] : 'às ' + horario;
+}
+
+/** Texto digitado pelo cliente: uma linha só, sem espaços sobrando, com limite de tamanho. */
+function limparTextoLivre(v, max) {
+  return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+/** Impede que um texto começando com = + - @ vire fórmula na planilha. */
+function protegerCelula(texto) {
+  return /^[=+\-@]/.test(texto) ? "'" + texto : texto;
+}
+
 /** Retorna DDD + número (10 ou 11 dígitos) ou '' se inválido. */
 function normalizarTelefone(v) {
   let d = String(v == null ? '' : v).replace(/\D/g, '');
@@ -256,14 +329,25 @@ function formatarTelefone(d) {
     : '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
 }
 
-function montarMensagem(dataISO, horario, telefone, recorrente) {
-  const p = dataISO.split('-').map(Number);
+/** Assunto do e-mail, ex.: "🆕 NOVO CLIENTE: Maria Silva, quarta 21/10 08:00-11:00". */
+function montarAssunto(r) {
+  const p = r.data.split('-').map(Number);
+  const dia = NOMES_DIAS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()];
+  const quando = dia + ' ' + String(p[2]).padStart(2, '0') + '/' + String(p[1]).padStart(2, '0') + ' ' + r.horario;
+  return (r.recorrente ? '✅ Reserva confirmada: ' : '🆕 NOVO CLIENTE: ') + r.nome + ', ' + quando;
+}
+
+function montarMensagem(r) {
+  const p = r.data.split('-').map(Number);
   const dia = NOMES_DIAS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()];
   const linhas = [
-    recorrente ? '✅ Nova reserva confirmada' : '🆕 NOVO CLIENTE — aguardando sinal de R$ ' + CONFIG.VALOR_SINAL,
-    '📅 ' + dia + ', ' + p[2].toString().padStart(2, '0') + '/' + p[1].toString().padStart(2, '0') + ' às ' + horario,
-    '📞 ' + formatarTelefone(telefone),
-    'https://wa.me/55' + telefone,
+    r.recorrente ? '✅ Nova reserva confirmada' : '🆕 NOVO CLIENTE — aguardando sinal de R$ ' + CONFIG.VALOR_SINAL,
+    '📅 ' + dia + ', ' + p[2].toString().padStart(2, '0') + '/' + p[1].toString().padStart(2, '0') + ' ' + descreverHorario(r.horario),
+    '👤 ' + r.nome,
+    '📍 ' + r.endereco,
+    'https://maps.google.com/?q=' + encodeURIComponent(r.endereco),
+    '📞 ' + formatarTelefone(r.telefone),
+    'https://wa.me/55' + r.telefone,
   ];
   return linhas.join('\n');
 }

@@ -18,17 +18,17 @@ Tempo estimado: 20–30 minutos. Tudo é gratuito.
 
 | Dia da semana | Horário | Ativo (sim/não) |
 |---|---|---|
-| terça | 09:00 | sim |
-| terça | 14:00 | sim |
+| terça | 08:00-11:00 | sim |
+| terça | 13:00-16:00 | sim |
 | … | … | … |
 
-- Os horários vêm **de exemplo** (09:00, 14:00 e 17:00, de terça a quinta). Edite quando definir os definitivos.
+- Já vêm com as janelas de atendimento: **08:00-11:00** e **13:00-16:00**, de terça a quinta. O cliente escolhe a janela, não um horário exato.
 - Para tirar um horário do ar, mude **Ativo** para `não` (ou apague a linha).
-- Aceita `terça`, `Terça-feira`, `terca` etc. Horários no formato `HH:mm`.
+- Aceita `terça`, `Terça-feira`, `terca` etc. Horário pode ser uma janela (`08:00-11:00`, `8h00 às 11h00`) ou um horário só (`09:00`).
 
 ### Aba Reservas
 
-Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **Status**, **Criado em**.
+Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **Status**, **Criado em**, **Nome**, **Endereço**.
 
 - `aguardando sinal` → cliente novo; o horário já fica bloqueado.
 - `confirmada` → mude para isso quando o Pix cair. A partir daí o cliente é **recorrente** e as próximas reservas dele são confirmadas direto, sem sinal.

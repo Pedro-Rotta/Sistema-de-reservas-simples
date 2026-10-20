@@ -372,10 +372,18 @@
         </fieldset>
 
         <fieldset>
-          <legend>2. Informe seu WhatsApp</legend>
-          <label for="reservas-telefone" class="reservas-label">Telefone com DDD</label>
+          <legend>2. Seus dados</legend>
+          <label for="reservas-nome" class="reservas-label">Nome</label>
+          <input id="reservas-nome" name="nome" type="text" autocomplete="name"
+                 placeholder="Seu nome" maxlength="60" required>
+
+          <label for="reservas-telefone" class="reservas-label">WhatsApp com DDD</label>
           <input id="reservas-telefone" name="telefone" type="tel" inputmode="numeric"
                  autocomplete="tel-national" placeholder="(18) 99999-9999" maxlength="15" required>
+
+          <label for="reservas-endereco" class="reservas-label">Endereço onde o carro vai estar</label>
+          <input id="reservas-endereco" name="endereco" type="text" autocomplete="street-address"
+                 placeholder="Rua, número e bairro" maxlength="150" required>
         </fieldset>
 
         <p id="reservas-erro" class="reservas-erro" role="alert" hidden></p>

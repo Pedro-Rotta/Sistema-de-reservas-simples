@@ -8,6 +8,7 @@ const assert = require('assert');
 /* ---------- Simulação mínima dos serviços do Apps Script ---------- */
 function criarAmbiente(hojeISO, abas) {
   const enviados = [];
+  const emails = [];
   const fmt = (d, tz, pattern) => {
     const p = new Intl.DateTimeFormat('en-CA', {
       timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -25,7 +26,7 @@ function criarAmbiente(hojeISO, abas) {
     constructor(...a) { if (a.length) super(...a); else super(`${hojeISO}T12:00:00-03:00`); }
   }
   const ctx = {
-    console: { warn: () => {}, log: console.log },
+    console: { warn: () => {}, error: () => {}, log: console.log },
     Date: FakeDate,
     Utilities: { formatDate: fmt },
     SpreadsheetApp: {
@@ -41,6 +42,7 @@ function criarAmbiente(hojeISO, abas) {
     UrlFetchApp: {
       fetch: (url) => { enviados.push(decodeURIComponent(url.match(/text=([^&]*)/)[1])); return { getResponseCode: () => 200 }; },
     },
+    MailApp: { sendEmail: (m) => emails.push(m) },
     ContentService: {
       MimeType: { JSON: 'json' },
       createTextOutput: (s) => ({ setMimeType: () => JSON.parse(s) }),
@@ -49,10 +51,12 @@ function criarAmbiente(hojeISO, abas) {
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'apps-script', 'Code.gs'), 'utf8'), ctx);
   ctx.enviados = enviados;
+  ctx.emails = emails;
   return ctx;
 }
 
-const post = (g, body) => g.doPost({ postData: { contents: JSON.stringify(body) } });
+const DADOS_CLIENTE = { nome: 'Maria Silva', endereco: 'Rua das Flores, 123, Centro' };
+const post = (g, body) => g.doPost({ postData: { contents: JSON.stringify({ ...DADOS_CLIENTE, ...body }) } });
 let total = 0;
 const teste = (nome, fn) => { fn(); total++; console.log('ok -', nome); };
 
@@ -147,6 +151,56 @@ teste('cancelada libera o horário', () => {
   };
   const g = criarAmbiente('2026-10-19', abas);
   assert.ok(g.doGet().slots.some((s) => s.data === '2026-10-20' && s.horario === '09:00'));
+});
+
+teste('horário: aceita janelas e normaliza formatos', () => {
+  const g = criarAmbiente('2026-10-19', {});
+  assert.strictEqual(g.normalizarHorario('8:00-11:00'), '08:00-11:00');
+  assert.strictEqual(g.normalizarHorario('13h00 às 16h00'), '13:00-16:00');
+  assert.strictEqual(g.normalizarHorario('9:00'), '09:00');
+  assert.strictEqual(g.normalizarHorario('manhã'), '');
+  assert.strictEqual(g.descreverHorario('08:00-11:00'), 'das 08:00 às 11:00');
+});
+
+teste('fluxo com janelas: grava nome e endereço e avisa com mapa', () => {
+  const abas = {
+    Horarios: [['Dia', 'Horário', 'Ativo'], ['terça', '08:00-11:00', 'sim'], ['terça', '13:00 às 16:00', 'sim']],
+    Reservas: [['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço']],
+  };
+  const g = criarAmbiente('2026-10-19', abas);
+  assert.deepStrictEqual(g.doGet().slots.filter((s) => s.data === '2026-10-20').map((s) => s.horario), ['08:00-11:00', '13:00-16:00']);
+
+  const r = post(g, { data: '2026-10-20', horario: '13:00-16:00', telefone: '18999990000',
+    nome: '  João   Souza ', endereco: 'Av. Brasil, 500, Jardim Paulista' });
+  assert.strictEqual(r.ok, true);
+  const linha = Array.from(abas.Reservas[1]);
+  assert.deepStrictEqual([linha[1], linha[5], linha[6]], ['13:00-16:00', 'João Souza', 'Av. Brasil, 500, Jardim Paulista']);
+  const msg = g.enviados[0];
+  assert.ok(msg.includes('das 13:00 às 16:00'));
+  assert.ok(msg.includes('João Souza'));
+  assert.ok(msg.includes('https://maps.google.com/?q=Av.%20Brasil'));
+  assert.ok(!g.doGet().slots.some((s) => s.data === '2026-10-20' && s.horario === '13:00-16:00'), 'janela reservada some');
+  assert.strictEqual(g.emails.length, 1, 'manda e-mail de aviso');
+  assert.strictEqual(g.emails[0].to, 'pedrorotta2006@gmail.com');
+  assert.strictEqual(g.emails[0].subject, '🆕 NOVO CLIENTE: João Souza, terça 20/10 13:00-16:00');
+  assert.strictEqual(g.emails[0].body, msg);
+});
+
+teste('nome e endereço: obrigatórios e sem virar fórmula na planilha', () => {
+  const abas = {
+    Horarios: [['Dia', 'Horário', 'Ativo'], ['terça', '08:00-11:00', 'sim']],
+    Reservas: [['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço']],
+  };
+  const g = criarAmbiente('2026-10-19', abas);
+  const base = { data: '2026-10-20', horario: '08:00-11:00', telefone: '18999990000' };
+  assert.strictEqual(post(g, { ...base, nome: '' }).ok, false);
+  assert.strictEqual(post(g, { ...base, endereco: 'Rua' }).ok, false);
+  assert.strictEqual(abas.Reservas.length, 1, 'nada gravado com dados inválidos');
+
+  post(g, { ...base, nome: '=HYPERLINK("x")', endereco: '+55 Rua X, 10' });
+  const linha = Array.from(abas.Reservas[1]);
+  assert.strictEqual(linha[5], "'=HYPERLINK(\"x\")");
+  assert.strictEqual(linha[6], "'+55 Rua X, 10");
 });
 
 console.log(`\n${total} testes passaram.`);

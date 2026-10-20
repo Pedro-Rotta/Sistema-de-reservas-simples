@@ -63,7 +63,7 @@ CSV no servidor foi descartado: site estático não consegue gravar arquivo, hav
 
 ## Pendências
 
-- [ ] Definir os horários exatos de cada dia (terça a quinta) — hoje estão os de exemplo: 09:00, 14:00 e 17:00
+- [x] Definir os horários: terça a quinta, janelas de 08:00-11:00 e 13:00-16:00
 - [x] Criar o repositório do projeto
 
 ## Entregáveis

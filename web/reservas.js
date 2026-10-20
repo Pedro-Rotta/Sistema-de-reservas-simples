@@ -1,5 +1,5 @@
 // URL do Web App do Google Apps Script (termina em /exec). Veja docs/CONFIGURACAO.md.
-const RESERVAS_API_URL = '';
+const RESERVAS_API_URL = 'https://script.google.com/macros/s/AKfycbyEcxBLa9EBoq2MljwwEfN1xBydNvZlqYwuxKa8VU69zC9UY3wGCvTImSpSDoUZAU4W5w/exec';
 
 (function () {
   const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -8,6 +8,8 @@ const RESERVAS_API_URL = '';
   const form = $('reservas-form');
   const slotsEl = $('reservas-slots');
   const telefoneEl = $('reservas-telefone');
+  const nomeEl = $('reservas-nome');
+  const enderecoEl = $('reservas-endereco');
   const botao = $('reservas-botao');
   const erroEl = $('reservas-erro');
 
@@ -31,7 +33,7 @@ const RESERVAS_API_URL = '';
         const d = new Date(Date.now() + i * 864e5);
         if ([2, 3, 4].includes(d.getDay())) {
           const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-          ['09:00', '14:00', '17:00'].forEach((horario) => slots.push({ data: iso, horario }));
+          ['08:00-11:00', '13:00-16:00'].forEach((horario) => slots.push({ data: iso, horario }));
         }
       }
       return { ok: true, valorServico: 50, valorSinal: 20, slots };
@@ -50,6 +52,9 @@ const RESERVAS_API_URL = '';
     return `${dia}, ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
   }
 
+  // "08:00-11:00" → "08:00 às 11:00"
+  const rotuloHorario = (h) => h.replace('-', ' às ');
+
   function mostrarErro(msg) {
     erroEl.textContent = msg || '';
     erroEl.hidden = !msg;
@@ -58,8 +63,13 @@ const RESERVAS_API_URL = '';
   function atualizarBotao() {
     const temHorario = !!form.querySelector('input[name="slot"]:checked');
     const digitos = telefoneEl.value.replace(/\D/g, '');
-    botao.disabled = !(temHorario && digitos.length >= 10);
+    const nomeOk = nomeEl.value.trim().length >= 2;
+    const enderecoOk = enderecoEl.value.trim().length >= 5;
+    botao.disabled = !(temHorario && digitos.length >= 10 && nomeOk && enderecoOk);
   }
+
+  nomeEl.addEventListener('input', atualizarBotao);
+  enderecoEl.addEventListener('input', atualizarBotao);
 
   // Máscara simples: (18) 99999-9999
   telefoneEl.addEventListener('input', () => {
@@ -97,7 +107,7 @@ const RESERVAS_API_URL = '';
         input.value = `${data}|${horario}`;
         input.addEventListener('change', atualizarBotao);
         const span = document.createElement('span');
-        span.textContent = horario;
+        span.textContent = rotuloHorario(horario);
         label.append(input, span);
         horas.appendChild(label);
       });
@@ -125,7 +135,9 @@ const RESERVAS_API_URL = '';
   function mostrarResultado(r) {
     form.hidden = true;
     $('reservas-resultado').hidden = false;
-    const quando = `${rotuloData(r.data)} às ${r.horario}`;
+    const quando = r.horario.includes('-')
+      ? `${rotuloData(r.data)}, das ${rotuloHorario(r.horario)}`
+      : `${rotuloData(r.data)} às ${r.horario}`;
 
     if (r.recorrente) {
       $('reservas-titulo').textContent = 'Reserva confirmada!';
@@ -159,7 +171,7 @@ const RESERVAS_API_URL = '';
       // Corpo como texto simples evita o "preflight" de CORS, que o Apps Script não suporta.
       const json = await chamarApi({
         method: 'POST',
-        body: JSON.stringify({ data, horario, telefone: telefoneEl.value }),
+        body: JSON.stringify({ data, horario, telefone: telefoneEl.value, nome: nomeEl.value, endereco: enderecoEl.value }),
       });
       if (!json.ok) {
         mostrarErro(json.erro);

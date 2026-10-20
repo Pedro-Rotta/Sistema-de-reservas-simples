@@ -49,7 +49,7 @@
 .reservas-hora input:focus-visible + span { outline: 2px solid var(--r-cor); outline-offset: 2px; }
 
 .reservas-label { display: block; font-size: .9rem; margin-bottom: 6px; color: var(--r-cor-suave); }
-.reservas input[type="tel"], .reservas textarea {
+.reservas input[type="tel"], .reservas input[type="text"], .reservas textarea {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
@@ -87,3 +87,4 @@
 .reservas-pix { margin-top: 12px; }
 .reservas-qrcode { display: flex; justify-content: center; margin: 12px 0; }
 .reservas-qrcode img, .reservas-qrcode canvas { max-width: 220px; height: auto; }
+.reservas fieldset input + .reservas-label { margin-top: 14px; }

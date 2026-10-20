@@ -260,8 +260,8 @@ h3 { font-size: 1.35rem; font-weight: 600; }
 .reservas h3 { font-family: var(--fonte-titulo); font-size: 1.6rem; text-transform: uppercase; }
 .reservas legend { color: var(--texto); }
 .reservas a { color: var(--azul-hover); }
-.reservas input[type="tel"], .reservas textarea { background: var(--preto); color: var(--texto); }
-.reservas input[type="tel"]::placeholder { color: var(--texto-3); }
+.reservas input[type="tel"], .reservas input[type="text"], .reservas textarea { background: var(--preto); color: var(--texto); }
+.reservas input[type="tel"]::placeholder, .reservas input[type="text"]::placeholder { color: var(--texto-3); }
 .reservas-hora span { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
 .reservas-hora span:hover { border-color: var(--azul); }
 .reservas-botao { min-height: 48px; }
