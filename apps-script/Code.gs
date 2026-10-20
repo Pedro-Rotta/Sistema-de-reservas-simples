@@ -20,6 +20,7 @@ const CONFIG = {
   FUSO: 'America/Sao_Paulo',
   EMAIL_AVISO: 'pedrorotta2006@gmail.com', // recebe um e-mail a cada reserva ('' para desligar)
   TEMPO_MINIMO_MS: 3000,      // envio mais rápido que isso desde que a página abriu = bot
+  MAX_PENDENTES: 6,           // reservas "aguardando sinal" ao mesmo tempo, somando todos os números
 };
 
 const STATUS = {
@@ -149,6 +150,16 @@ function criarReserva_(body) {
     };
   }
 
+  // Teto geral: impede que alguém trocando de número ocupe a agenda inteira.
+  const pendentes = contarPendentes(reservas);
+  if (!recorrente && pendentes >= CONFIG.MAX_PENDENTES) {
+    alertarTeto_(pendentes);
+    return {
+      ok: false,
+      erro: 'No momento não conseguimos receber novas reservas pelo site. Chame no WhatsApp (18) 99805-1878 para marcar.',
+    };
+  }
+
   const status = recorrente ? STATUS.CONFIRMADA : STATUS.AGUARDANDO;
   const agora = Utilities.formatDate(new Date(), CONFIG.FUSO, 'yyyy-MM-dd HH:mm:ss');
   abaReservas_().appendRow([data, horario, telefone, status, agora, protegerCelula(nome), protegerCelula(endereco)]);
@@ -235,6 +246,16 @@ function avisarReserva_(r) {
   notificarEmail_(montarAssunto(r), texto);
 }
 
+/** Avisa o dono que o teto foi atingido, no máximo uma vez por hora. */
+function alertarTeto_(pendentes) {
+  const cache = CacheService.getScriptCache();
+  if (cache.get('alerta-teto')) return;
+  cache.put('alerta-teto', '1', 3600);
+  notificarEmail_('⚠️ Limite de reservas pendentes atingido',
+    'Há ' + pendentes + ' reservas aguardando sinal. Novos clientes não conseguem reservar pelo site até alguma ser ' +
+    'confirmada, cancelada ou expirar. Se não reconhecer esses pedidos, pode ser um bot: confira a aba Reservas.');
+}
+
 function notificarEmail_(assunto, texto) {
   if (!CONFIG.EMAIL_AVISO) return;
   try {
@@ -274,6 +295,10 @@ function motivoAntiBot(body, tempoMinimoMs) {
   const tempo = Number(body.tempoMs);
   if (!isFinite(tempo) || tempo < tempoMinimoMs) return 'rapido';
   return '';
+}
+
+function contarPendentes(reservas) {
+  return reservas.filter(function (r) { return r.status === STATUS.AGUARDANDO; }).length;
 }
 
 function calcularSlots(hojeISO, horarios, ocupados, diasAFrente) {

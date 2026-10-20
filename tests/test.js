@@ -9,6 +9,7 @@ const assert = require('assert');
 function criarAmbiente(hojeISO, abas) {
   const enviados = [];
   const emails = [];
+  const cache = {};
   const fmt = (d, tz, pattern) => {
     const p = new Intl.DateTimeFormat('en-CA', {
       timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -43,6 +44,9 @@ function criarAmbiente(hojeISO, abas) {
       fetch: (url) => { enviados.push(decodeURIComponent(url.match(/text=([^&]*)/)[1])); return { getResponseCode: () => 200 }; },
     },
     MailApp: { sendEmail: (m) => emails.push(m) },
+    CacheService: {
+      getScriptCache: () => ({ get: (k) => (k in cache ? cache[k] : null), put: (k, v) => { cache[k] = v; } }),
+    },
     ContentService: {
       MimeType: { JSON: 'json' },
       createTextOutput: (s) => ({ setMimeType: () => JSON.parse(s) }),
@@ -228,6 +232,42 @@ teste('anti-bot: envio rápido demais ou sem tempo é recusado; 3000 ms passa', 
   assert.strictEqual(g.motivoAntiBot({ tempoMs: 3000 }, 3000), '');
   assert.strictEqual(post(g, { ...BASE, tempoMs: 800 }).ok, false);
   assert.strictEqual(post(g, { ...BASE, tempoMs: 3000 }).ok, true);
+});
+
+const comPendentes = (n) => {
+  const abas = {
+    Horarios: [['Dia', 'Horário', 'Ativo'], ['terça', '08:00-11:00', 'sim'], ['quarta', '08:00-11:00', 'sim']],
+    Reservas: [['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço']],
+  };
+  // n pendentes em datas passadas, para não ocupar as janelas testadas
+  for (let i = 0; i < n; i++) abas.Reservas.push(['2026-10-0' + (i + 1), '08:00-11:00', '1899999000' + i, 'aguardando sinal', '', 'Bot', 'Rua X, 1']);
+  return abas;
+};
+
+teste('teto: com 6 pendentes, cliente novo é recusado e alerta sai uma vez só', () => {
+  const abas = comPendentes(6);
+  const g = criarAmbiente('2026-10-19', abas);
+  assert.strictEqual(g.contarPendentes(g.lerReservas_()), 6);
+  const r1 = post(g, { data: '2026-10-20', horario: '08:00-11:00', telefone: '18911112222' });
+  const r2 = post(g, { data: '2026-10-21', horario: '08:00-11:00', telefone: '18933334444' });
+  assert.strictEqual(r1.ok, false);
+  assert.ok(r1.erro.includes('WhatsApp'), 'manda o cliente para o WhatsApp');
+  assert.strictEqual(r2.ok, false);
+  assert.strictEqual(abas.Reservas.length, 7, 'nada gravado');
+  assert.strictEqual(g.emails.length, 1, 'um alerta só');
+  assert.ok(g.emails[0].subject.includes('Limite de reservas pendentes'));
+});
+
+teste('teto: com 5 pendentes ainda aceita; recorrente passa mesmo com teto atingido', () => {
+  const g5 = criarAmbiente('2026-10-19', comPendentes(5));
+  assert.strictEqual(post(g5, { data: '2026-10-20', horario: '08:00-11:00', telefone: '18911112222' }).ok, true);
+
+  const abas = comPendentes(6);
+  abas.Reservas.push(['2026-09-01', '08:00-11:00', '18955556666', 'confirmada', '', 'Cliente fiel', 'Rua Y, 2']);
+  const g = criarAmbiente('2026-10-19', abas);
+  const r = post(g, { data: '2026-10-20', horario: '08:00-11:00', telefone: '18955556666' });
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.status, 'confirmada');
 });
 
 console.log(`\n${total} testes passaram.`);
