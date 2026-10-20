@@ -21,6 +21,7 @@ const CONFIG = {
   EMAIL_AVISO: 'pedrorotta2006@gmail.com', // recebe um e-mail a cada reserva ('' para desligar)
   TEMPO_MINIMO_MS: 3000,      // envio mais rápido que isso desde que a página abriu = bot
   MAX_PENDENTES: 6,           // reservas "aguardando sinal" ao mesmo tempo, somando todos os números
+  HORAS_EXPIRAR_SINAL: 12,    // "aguardando sinal" mais antigo que isso vira "cancelada" (gatilho de hora em hora)
 };
 
 const STATUS = {
@@ -82,6 +83,15 @@ function setup() {
   console.log(resumo);
   console.log('Endereço da planilha: ' + ss.getUrl());
   ss.toast(feito.join(', '), 'Sistema de reservas', 10);
+}
+
+/** Rode uma vez pelo editor: agenda `expirarSinais` para rodar de hora em hora. Pode rodar de novo sem duplicar. */
+function instalarGatilhos() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'expirarSinais') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('expirarSinais').timeBased().everyHours(1).create();
+  console.log('Gatilho instalado: expirarSinais vai rodar a cada 1 hora.');
 }
 
 /* ============================ Web App ============================ */
@@ -173,6 +183,7 @@ function criarReserva_(body) {
     resposta.pix = {
       valor: CONFIG.VALOR_SINAL,
       copiaECola: gerarPix(CONFIG.PIX_CHAVE, CONFIG.VALOR_SINAL, CONFIG.PIX_NOME, CONFIG.PIX_CIDADE),
+      prazoHoras: CONFIG.HORAS_EXPIRAR_SINAL,
     };
   }
   return resposta;
@@ -212,6 +223,30 @@ function lerReservas_() {
         status: normalizarTexto(l[3]),
       };
     });
+}
+
+/** Cancela sinais não pagos dentro do prazo e avisa o dono por e-mail. Chamada pelo gatilho. */
+function expirarSinais() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const aba = abaReservas_();
+    const linhas = aba.getDataRange().getValues().slice(1);
+    const indices = reservasParaExpirar(linhas, new Date().getTime(), CONFIG.HORAS_EXPIRAR_SINAL);
+    indices.forEach(function (i) { aba.getRange(i + 2, 4).setValue(STATUS.CANCELADA); });
+    console.log('Sinais expirados: ' + indices.length);
+    if (!indices.length) return;
+    const fuso = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+    const lista = indices.map(function (i) {
+      const l = linhas[i];
+      return '• ' + celulaData_(l[0], fuso) + ' ' + celulaHorario_(l[1], fuso) + ' — ' + l[5] + ' (' + l[2] + ')';
+    }).join('\n');
+    notificarEmail_('⏰ ' + indices.length + ' reserva(s) expirada(s) sem sinal',
+      'Estas reservas passaram de ' + CONFIG.HORAS_EXPIRAR_SINAL + ' h sem pagamento e foram canceladas. ' +
+      'As janelas voltaram para o site.\n\n' + lista);
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function abaReservas_() {
@@ -299,6 +334,20 @@ function motivoAntiBot(body, tempoMinimoMs) {
 
 function contarPendentes(reservas) {
   return reservas.filter(function (r) { return r.status === STATUS.AGUARDANDO; }).length;
+}
+
+/** Índices (0 = linha 2 da planilha) de "aguardando sinal" criados há mais de `horas`. Linhas sem "Criado em" ficam. */
+function reservasParaExpirar(linhas, agoraMs, horas) {
+  const limite = agoraMs - horas * 3600 * 1000;
+  const indices = [];
+  linhas.forEach(function (l, i) {
+    if (normalizarTexto(l[3]) !== STATUS.AGUARDANDO) return;
+    if (!(l[4] instanceof Date) && !String(l[4] == null ? '' : l[4]).trim()) return; // sem "Criado em": linha manual, não mexe
+    const criado = l[4] instanceof Date ? l[4].getTime()
+      : new Date(String(l[4]).trim().replace(' ', 'T') + '-03:00').getTime(); // "Criado em" é gravado no horário de Brasília
+    if (isFinite(criado) && criado < limite) indices.push(i);
+  });
+  return indices;
 }
 
 function calcularSlots(hojeISO, horarios, ocupados, diasAFrente) {

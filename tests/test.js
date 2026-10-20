@@ -21,6 +21,7 @@ function criarAmbiente(hojeISO, abas) {
   const sheet = (linhas) => ({
     getDataRange: () => ({ getValues: () => linhas.map((l) => l.slice()) }),
     appendRow: (l) => linhas.push(l),
+    getRange: (linha, coluna) => ({ setValue: (v) => { linhas[linha - 1][coluna - 1] = v; } }),
   });
   const RealDate = Date;
   class FakeDate extends RealDate {
@@ -268,6 +269,37 @@ teste('teto: com 5 pendentes ainda aceita; recorrente passa mesmo com teto ating
   const r = post(g, { data: '2026-10-20', horario: '08:00-11:00', telefone: '18955556666' });
   assert.strictEqual(r.ok, true);
   assert.strictEqual(r.status, 'confirmada');
+});
+
+teste('expiração: só "aguardando sinal" com mais de 12 h vira cancelada', () => {
+  const abas = {
+    Horarios: [['Dia', 'Horário', 'Ativo'], ['terça', '08:00-11:00', 'sim'], ['terça', '13:00-16:00', 'sim']],
+    Reservas: [['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço'],
+      ['2026-10-20', '08:00-11:00', '18911110000', 'aguardando sinal', '2026-10-18 23:00:00', 'Velho', 'Rua A, 1'],   // 13 h → expira
+      ['2026-10-20', '13:00-16:00', '18922220000', 'aguardando sinal', '2026-10-19 01:00:00', 'Recente', 'Rua B, 2'], // 11 h → fica
+      ['2026-10-27', '08:00-11:00', '18933330000', 'confirmada', '2026-10-01 10:00:00', 'Pago', 'Rua C, 3'],          // confirmada → fica
+      ['2026-10-27', '13:00-16:00', 'bloqueio', 'aguardando sinal', '', '', ''],                                      // sem data → fica
+      ['2026-10-28', '08:00-11:00', '18944440000', 'cancelada', '2026-10-01 10:00:00', 'Antigo', 'Rua D, 4']],       // já cancelada
+  };
+  const g = criarAmbiente('2026-10-19', abas);
+  assert.ok(!g.doGet().slots.some((s) => s.data === '2026-10-20' && s.horario === '08:00-11:00'), 'antes: ocupada');
+
+  g.expirarSinais();
+
+  assert.deepStrictEqual(abas.Reservas.slice(1).map((l) => l[3]),
+    ['cancelada', 'aguardando sinal', 'confirmada', 'aguardando sinal', 'cancelada']);
+  assert.ok(g.doGet().slots.some((s) => s.data === '2026-10-20' && s.horario === '08:00-11:00'), 'depois: janela volta');
+  assert.strictEqual(g.emails.length, 1, 'avisa o dono');
+  assert.ok(g.emails[0].body.includes('Velho'));
+
+  g.expirarSinais();
+  assert.strictEqual(g.emails.length, 1, 'sem nada novo, não manda e-mail');
+});
+
+teste('Pix informa o prazo de pagamento do sinal', () => {
+  const g = criarAmbiente('2026-10-19', abasSimples());
+  const r = post(g, BASE);
+  assert.strictEqual(r.pix.prazoHoras, 12);
 });
 
 console.log(`\n${total} testes passaram.`);
