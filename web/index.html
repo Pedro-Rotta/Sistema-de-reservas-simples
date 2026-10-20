@@ -386,6 +386,12 @@
                  placeholder="Rua, número e bairro" maxlength="150" required>
         </fieldset>
 
+        <!-- Campo-armadilha: invisível para pessoas; bots costumam preencher. Não remova. -->
+        <div class="reservas-armadilha" aria-hidden="true">
+          <label for="reservas-campo-extra">Não preencha este campo</label>
+          <input id="reservas-campo-extra" name="campo_extra" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
         <p id="reservas-erro" class="reservas-erro" role="alert" hidden></p>
         <button id="reservas-botao" type="submit" class="reservas-botao" disabled>Reservar</button>
       </form>
@@ -401,7 +407,7 @@
           <label for="reservas-copia-cola" class="reservas-label">Pix copia e cola</label>
           <textarea id="reservas-copia-cola" rows="3" readonly></textarea>
           <button id="reservas-copiar" type="button" class="reservas-botao reservas-botao--sec">Copiar código Pix</button>
-          <p class="reservas-info">Seu horário fica reservado enquanto confirmamos o pagamento.</p>
+          <p id="reservas-prazo" class="reservas-info">Seu horário fica reservado enquanto confirmamos o pagamento.</p>
         </div>
 
         <button id="reservas-nova" type="button" class="reservas-link">Fazer outra reserva</button>

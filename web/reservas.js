@@ -19,6 +19,9 @@ const RESERVAS_API_URL = 'https://script.google.com/macros/s/AKfycbyEcxBLa9EBoq2
   // Telefone terminado em 1111 simula cliente recorrente.
   const DEMO = new URLSearchParams(location.search).has('demo');
 
+  // Anti-bot: o script recusa envios feitos menos de 3 s depois de a página abrir.
+  const carregadaEm = Date.now();
+
   async function chamarApi(opcoes) {
     if (DEMO) return apiDemo(opcoes);
     if (!RESERVAS_API_URL) throw new Error('sem-url');
@@ -43,7 +46,7 @@ const RESERVAS_API_URL = 'https://script.google.com/macros/s/AKfycbyEcxBLa9EBoq2
     return recorrente
       ? { ok: true, status: 'confirmada', recorrente, data: b.data, horario: b.horario }
       : { ok: true, status: 'aguardando sinal', recorrente, data: b.data, horario: b.horario,
-          pix: { valor: 20, copiaECola: 'DEMONSTRACAO-SEM-VALOR-PIX-REAL' } };
+          pix: { valor: 20, copiaECola: 'DEMONSTRACAO-SEM-VALOR-PIX-REAL', prazoHoras: 12 } };
   }
 
   function rotuloData(iso) {
@@ -150,6 +153,10 @@ const RESERVAS_API_URL = 'https://script.google.com/macros/s/AKfycbyEcxBLa9EBoq2
     $('reservas-detalhe').textContent = `Seu horário: ${quando}.`;
     $('reservas-pix-valor').textContent = reais(r.pix.valor);
     $('reservas-copia-cola').value = r.pix.copiaECola;
+    if (r.pix.prazoHoras) {
+      $('reservas-prazo').textContent =
+        `Pague o sinal em até ${r.pix.prazoHoras} horas. Depois disso, o horário é liberado automaticamente.`;
+    }
     const qr = $('reservas-qrcode');
     qr.innerHTML = '';
     if (window.QRCode) {
@@ -171,7 +178,10 @@ const RESERVAS_API_URL = 'https://script.google.com/macros/s/AKfycbyEcxBLa9EBoq2
       // Corpo como texto simples evita o "preflight" de CORS, que o Apps Script não suporta.
       const json = await chamarApi({
         method: 'POST',
-        body: JSON.stringify({ data, horario, telefone: telefoneEl.value, nome: nomeEl.value, endereco: enderecoEl.value }),
+        body: JSON.stringify({
+          data, horario, telefone: telefoneEl.value, nome: nomeEl.value, endereco: enderecoEl.value,
+          tempoMs: Date.now() - carregadaEm, campo_extra: $('reservas-campo-extra').value,
+        }),
       });
       if (!json.ok) {
         mostrarErro(json.erro);

@@ -88,3 +88,6 @@
 .reservas-qrcode { display: flex; justify-content: center; margin: 12px 0; }
 .reservas-qrcode img, .reservas-qrcode canvas { max-width: 220px; height: auto; }
 .reservas fieldset input + .reservas-label { margin-top: 14px; }
+
+/* Campo-armadilha anti-bot: fora da tela, sem sumir do formulário (display:none faria bots ignorarem). */
+.reservas-armadilha { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
