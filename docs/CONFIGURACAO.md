@@ -71,7 +71,13 @@ Já vem ligada. Os valores ficam no `CONFIG`, no topo do `Code.gs`:
 | `MAX_PENDENTES` | 6 | Com 6 reservas "aguardando sinal", clientes novos são mandados para o WhatsApp e você recebe um e-mail (no máximo 1 por hora). Clientes que já pagaram antes não são afetados |
 | `HORAS_EXPIRAR_SINAL` | 12 | "Aguardando sinal" com mais de 12 h vira `cancelada` sozinho e a janela volta para o site. Você recebe um e-mail com a lista |
 
-**Uma vez só, depois de colar o código:** no Apps Script, rode a função **`instalarGatilhos`**. O Google pede uma autorização nova (para rodar em segundo plano). Confira em **Acionadores** (ícone de relógio) que `expirarSinais` aparece "De hora em hora".
+**Uma vez só, depois de colar o código, nesta ordem:**
+
+1. Na aba Reservas, mude para `confirmada` toda reserva **já paga** que ainda esteja como `aguardando sinal`. Na primeira execução, tudo que estiver "aguardando sinal" há mais de 12 h é cancelado de uma vez.
+2. No Apps Script, rode a função **`instalarGatilhos`** e autorize. O Google pede uma permissão nova (para rodar em segundo plano). Confira em **Acionadores** (ícone de relógio) que `expirarSinais` aparece "De hora em hora".
+3. Só então publique: **Implantar → Gerenciar implantações → lápis → Nova versão**. Publicar antes de autorizar pode fazer o site parar de responder até a autorização.
+
+**No dia a dia:** marque o Pix como `confirmada` assim que ele cair. Um sinal pago mas ainda não marcado expira junto com os não pagos depois de 12 h, e a janela pode ser reservada por outra pessoa. O e-mail de expiração lista quem foi cancelado.
 
 Para conferir uma reserva na hora, sem esperar a expiração, mude o status à mão como sempre.
 

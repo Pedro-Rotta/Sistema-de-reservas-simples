@@ -243,7 +243,8 @@ function expirarSinais() {
     }).join('\n');
     notificarEmail_('⏰ ' + indices.length + ' reserva(s) expirada(s) sem sinal',
       'Estas reservas passaram de ' + CONFIG.HORAS_EXPIRAR_SINAL + ' h sem pagamento e foram canceladas. ' +
-      'As janelas voltaram para o site.\n\n' + lista);
+      'As janelas voltaram para o site.\n\n' + lista +
+      '\n\nSe alguém da lista já pagou, mude a linha para "confirmada" e confira se a janela não foi reservada por outra pessoa.');
   } finally {
     lock.releaseLock();
   }

@@ -291,6 +291,7 @@ teste('expiração: só "aguardando sinal" com mais de 12 h vira cancelada', () 
   assert.ok(g.doGet().slots.some((s) => s.data === '2026-10-20' && s.horario === '08:00-11:00'), 'depois: janela volta');
   assert.strictEqual(g.emails.length, 1, 'avisa o dono');
   assert.ok(g.emails[0].body.includes('Velho'));
+  assert.ok(g.emails[0].body.includes('já pagou'), 'orienta o dono se alguém pagou e não foi marcado');
 
   g.expirarSinais();
   assert.strictEqual(g.emails.length, 1, 'sem nada novo, não manda e-mail');
