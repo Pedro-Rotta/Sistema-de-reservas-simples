@@ -1,0 +1,4 @@
+# Netlify: publica só a pasta web/ (site estático, sem etapa de build).
+[build]
+  publish = "web"
+  command = ""
