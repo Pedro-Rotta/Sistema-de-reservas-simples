@@ -60,6 +60,21 @@ Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **
 
 **Ao alterar o código depois:** use **Implantar → Gerenciar implantações → lápis (editar) → Versão: Nova versão → Implantar**. Assim a URL continua a mesma. (Criar uma "Nova implantação" gera outra URL.)
 
+## Proteção contra bots
+
+Já vem ligada. Os valores ficam no `CONFIG`, no topo do `Code.gs`:
+
+| O quê | Valor | Efeito |
+|---|---|---|
+| `TEMPO_MINIMO_MS` | 3000 | Recusa envios feitos menos de 3 s depois de abrir a página (bots) |
+| campo-armadilha | — | Campo invisível no formulário; se vier preenchido, a reserva é recusada |
+| `MAX_PENDENTES` | 6 | Com 6 reservas "aguardando sinal", clientes novos são mandados para o WhatsApp e você recebe um e-mail (no máximo 1 por hora). Clientes que já pagaram antes não são afetados |
+| `HORAS_EXPIRAR_SINAL` | 12 | "Aguardando sinal" com mais de 12 h vira `cancelada` sozinho e a janela volta para o site. Você recebe um e-mail com a lista |
+
+**Uma vez só, depois de colar o código:** no Apps Script, rode a função **`instalarGatilhos`**. O Google pede uma autorização nova (para rodar em segundo plano). Confira em **Acionadores** (ícone de relógio) que `expirarSinais` aparece "De hora em hora".
+
+Para conferir uma reserva na hora, sem esperar a expiração, mude o status à mão como sempre.
+
 ## 4. Landing page e reservas
 
 A landing page completa está em `web/index.html` (com a seção de reservas embutida).
