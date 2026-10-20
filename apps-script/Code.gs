@@ -19,6 +19,7 @@ const CONFIG = {
   PIX_CIDADE: 'PRESIDENTE PRUDENTE',    // até 15 caracteres, sem acento — ajuste para sua cidade
   FUSO: 'America/Sao_Paulo',
   EMAIL_AVISO: 'pedrorotta2006@gmail.com', // recebe um e-mail a cada reserva ('' para desligar)
+  TEMPO_MINIMO_MS: 3000,      // envio mais rápido que isso desde que a página abriu = bot
 };
 
 const STATUS = {
@@ -118,6 +119,12 @@ function doPost(e) {
 }
 
 function criarReserva_(body) {
+  const motivoBot = motivoAntiBot(body, CONFIG.TEMPO_MINIMO_MS);
+  if (motivoBot) {
+    console.warn('Reserva recusada pelo filtro anti-bot: ' + motivoBot);
+    return { ok: false, erro: 'Não foi possível concluir a reserva. Recarregue a página e tente de novo.' };
+  }
+
   const telefone = normalizarTelefone(body.telefone);
   if (!telefone) return { ok: false, erro: 'Telefone inválido. Use DDD + número.' };
   const nome = limparTextoLivre(body.nome, 60);
@@ -260,6 +267,14 @@ function notificarWhatsApp_(texto) {
 }
 
 /* ============== Funções puras (testadas em tests/test.js) ============== */
+
+/** '' se parece gente; 'armadilha' se o campo invisível veio preenchido; 'rapido' se foi rápido demais. */
+function motivoAntiBot(body, tempoMinimoMs) {
+  if (String(body.campo_extra == null ? '' : body.campo_extra).trim()) return 'armadilha';
+  const tempo = Number(body.tempoMs);
+  if (!isFinite(tempo) || tempo < tempoMinimoMs) return 'rapido';
+  return '';
+}
 
 function calcularSlots(hojeISO, horarios, ocupados, diasAFrente) {
   const p = hojeISO.split('-').map(Number);

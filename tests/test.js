@@ -55,7 +55,8 @@ function criarAmbiente(hojeISO, abas) {
   return ctx;
 }
 
-const DADOS_CLIENTE = { nome: 'Maria Silva', endereco: 'Rua das Flores, 123, Centro' };
+// tempoMs simula a pessoa levando 5 s entre abrir a página e enviar.
+const DADOS_CLIENTE = { nome: 'Maria Silva', endereco: 'Rua das Flores, 123, Centro', tempoMs: 5000, campo_extra: '' };
 const post = (g, body) => g.doPost({ postData: { contents: JSON.stringify({ ...DADOS_CLIENTE, ...body }) } });
 let total = 0;
 const teste = (nome, fn) => { fn(); total++; console.log('ok -', nome); };
@@ -201,6 +202,32 @@ teste('nome e endereço: obrigatórios e sem virar fórmula na planilha', () => 
   const linha = Array.from(abas.Reservas[1]);
   assert.strictEqual(linha[5], "'=HYPERLINK(\"x\")");
   assert.strictEqual(linha[6], "'+55 Rua X, 10");
+});
+
+const abasSimples = () => ({
+  Horarios: [['Dia', 'Horário', 'Ativo'], ['terça', '08:00-11:00', 'sim']],
+  Reservas: [['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço']],
+});
+const BASE = { data: '2026-10-20', horario: '08:00-11:00', telefone: '18999990000' };
+
+teste('anti-bot: campo-armadilha preenchido é recusado sem gravar nem avisar', () => {
+  const abas = abasSimples();
+  const g = criarAmbiente('2026-10-19', abas);
+  const r = post(g, { ...BASE, campo_extra: 'http://spam.example' });
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(abas.Reservas.length, 1, 'nada gravado');
+  assert.strictEqual(g.emails.length, 0, 'nenhum aviso');
+  assert.strictEqual(post(g, { ...BASE, campo_extra: '   ' }).ok, true, 'só espaços não conta como preenchido');
+});
+
+teste('anti-bot: envio rápido demais ou sem tempo é recusado; 3000 ms passa', () => {
+  const g = criarAmbiente('2026-10-19', abasSimples());
+  assert.strictEqual(g.motivoAntiBot({ tempoMs: 2999 }, 3000), 'rapido');
+  assert.strictEqual(g.motivoAntiBot({}, 3000), 'rapido', 'sem tempoMs (chamada direta à API)');
+  assert.strictEqual(g.motivoAntiBot({ tempoMs: 'abc' }, 3000), 'rapido');
+  assert.strictEqual(g.motivoAntiBot({ tempoMs: 3000 }, 3000), '');
+  assert.strictEqual(post(g, { ...BASE, tempoMs: 800 }).ok, false);
+  assert.strictEqual(post(g, { ...BASE, tempoMs: 3000 }).ok, true);
 });
 
 console.log(`\n${total} testes passaram.`);
