@@ -9,10 +9,11 @@ Tempo estimado: 20–30 minutos. Tudo é gratuito.
 3. Apague o conteúdo de `Código.gs` e cole todo o conteúdo de [`apps-script/Code.gs`](../apps-script/Code.gs).
 4. No topo do arquivo, revise o bloco `CONFIG`:
    - `PIX_NOME` (até 25 letras, sem acento) e `PIX_CIDADE` (até 15 letras, sem acento) — aparecem no Pix do cliente.
-   - Valores (`VALOR_SERVICO`, `VALOR_SINAL`) e chave Pix já estão preenchidos.
+   - Valor do sinal (`VALOR_SINAL`) e chave Pix já estão preenchidos. Os preços dos serviços ficam na aba **Servicos**.
 5. Salve (Ctrl+S). No seletor de funções, escolha **`setup`** e clique em **Executar**.
    - Na primeira vez o Google pede autorização: **Revisar permissões → sua conta → Avançado → Acessar (não seguro) → Permitir**. É o seu próprio script, por isso o aviso.
-6. Volte à planilha: as abas **Horarios** e **Reservas** foram criadas.
+6. Volte à planilha: as abas **Horarios**, **Reservas** e **Servicos** foram criadas.
+   - **Planilha que já estava em uso:** rode `setup` de novo. Ele cria a aba **Servicos** e acrescenta as colunas novas no cabeçalho de **Reservas**, sem apagar nada.
 
 ### Aba Horarios
 
@@ -28,12 +29,26 @@ Tempo estimado: 20–30 minutos. Tudo é gratuito.
 
 ### Aba Reservas
 
-Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **Status**, **Criado em**, **Nome**, **Endereço**.
+Colunas: **Data** (`aaaa-mm-dd`), **Horário**, **Telefone** (DDD + número), **Status**, **Criado em**, **Nome**, **Endereço**, **Veículo**, **Serviço**, **Adicional** (sim/não), **Valor** (total em reais, sinal incluído).
 
 - `aguardando sinal` → cliente novo; o horário já fica bloqueado.
 - `confirmada` → mude para isso quando o Pix cair. A partir daí o cliente é **recorrente** e as próximas reservas dele são confirmadas direto, sem sinal.
 - `cancelada` (ou apagar a linha) → libera o horário.
 - **Bloquear uma data específica** (folga, feriado): adicione uma linha com a data, o horário, qualquer texto em Telefone (ex.: `bloqueio`) e status `confirmada`.
+
+### Aba Servicos
+
+| Código (não altere) | Nome | Carro (R$) | Camionete (R$) |
+|---|---|---|---|
+| externa | Lavagem externa | 30 | 45 |
+| interna | Lavagem interna | 35 | 50 |
+| completa | Lavagem completa | 60 | 90 |
+| adicional | Adicional (pneus, plásticos e vidros) | 15 | 20 |
+
+- Mude **Nome** e os preços à vontade; o site e os avisos usam o que estiver aqui. Lembre de atualizar também a tabela de preços da página (`web/index.html`).
+- Não mude a coluna **Código**: é por ela que o site sabe qual opção é qual.
+- Para tirar um serviço do site, apague o preço dele (linha sem preço não aparece).
+- O valor é sempre calculado pelo script a partir desta aba, nunca pelo que vem da página.
 
 ## 2. WhatsApp (CallMeBot)
 

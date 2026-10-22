@@ -1,8 +1,8 @@
 /**
  * Sistema de reservas simples — Google Apps Script (Web App)
  *
- * GET  → lista os horários livres
- * POST → cria uma reserva { data: "yyyy-MM-dd", horario: "HH:mm", telefone: "..." }
+ * GET  → lista os horários livres e a tabela de serviços
+ * POST → cria uma reserva { data, horario, telefone, nome, endereco, veiculo, servico, adicional }
  *
  * Este script deve ficar vinculado à planilha (Extensões → Apps Script).
  * Rode a função `setup` uma vez para criar as abas com horários de exemplo.
@@ -11,8 +11,8 @@
 const CONFIG = {
   ABA_HORARIOS: 'Horarios',
   ABA_RESERVAS: 'Reservas',
+  ABA_SERVICOS: 'Servicos',
   DIAS_A_FRENTE: 21,          // janela de 3 semanas
-  VALOR_SERVICO: 50,
   VALOR_SINAL: 20,
   PIX_CHAVE: '+5518998051878',
   PIX_NOME: 'PEDRO AUGUSTO ROTTA',    // até 25 caracteres, sem acento
@@ -39,8 +39,20 @@ const HORARIOS_EXEMPLO = [
   ['quinta', '08:00-11:00', 'sim'], ['quinta', '13:00-16:00', 'sim'],
 ];
 
-// Colunas da aba "Reservas" (Nome e Endereço ficam no fim para não mexer nas primeiras).
-const CABECALHO_RESERVAS = ['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço'];
+// Preços iniciais da aba "Servicos" (iguais à tabela da página). A coluna Código não deve ser alterada.
+// "adicional" é somado a qualquer serviço quando o cliente marca a opção.
+const SERVICOS_EXEMPLO = [
+  ['externa', 'Lavagem externa', 30, 45],
+  ['interna', 'Lavagem interna', 35, 50],
+  ['completa', 'Lavagem completa', 60, 90],
+  ['adicional', 'Adicional (pneus, plásticos e vidros)', 15, 20],
+];
+
+const VEICULOS = { carro: 'Carro', camionete: 'Camionete' };
+
+// Colunas da aba "Reservas" (as mais novas ficam no fim para não mexer nas primeiras).
+const CABECALHO_RESERVAS = ['Data', 'Horário', 'Telefone', 'Status', 'Criado em', 'Nome', 'Endereço',
+  'Veículo', 'Serviço', 'Adicional', 'Valor'];
 
 /* ============================ Configuração ============================ */
 
@@ -65,7 +77,7 @@ function setup() {
   let reservas = ss.getSheetByName(CONFIG.ABA_RESERVAS);
   if (!reservas) {
     reservas = ss.insertSheet(CONFIG.ABA_RESERVAS);
-    reservas.getRange('A:G').setNumberFormat('@');
+    reservas.getRange('A:J').setNumberFormat('@');
     reservas.getRange(1, 1, 1, CABECALHO_RESERVAS.length).setValues([CABECALHO_RESERVAS]).setFontWeight('bold');
     reservas.setFrozenRows(1);
     const regra = SpreadsheetApp.newDataValidation()
@@ -74,8 +86,23 @@ function setup() {
       .build();
     reservas.getRange('D2:D').setDataValidation(regra);
     feito.push('aba Reservas criada');
+  } else if (reservas.getLastColumn() < CABECALHO_RESERVAS.length) {
+    reservas.getRange(1, 1, 1, CABECALHO_RESERVAS.length).setValues([CABECALHO_RESERVAS]).setFontWeight('bold');
+    reservas.getRange('H:J').setNumberFormat('@');
+    feito.push('aba Reservas ganhou as colunas de serviço');
   } else {
     feito.push('aba Reservas já existia');
+  }
+
+  let servicos = ss.getSheetByName(CONFIG.ABA_SERVICOS);
+  if (!servicos) {
+    servicos = ss.insertSheet(CONFIG.ABA_SERVICOS);
+    servicos.getRange(1, 1, 1, 4).setValues([['Código (não altere)', 'Nome', 'Carro (R$)', 'Camionete (R$)']]).setFontWeight('bold');
+    servicos.getRange(2, 1, SERVICOS_EXEMPLO.length, 4).setValues(SERVICOS_EXEMPLO);
+    servicos.setFrozenRows(1);
+    feito.push('aba Servicos criada');
+  } else {
+    feito.push('aba Servicos já existia');
   }
 
   const resumo = 'Planilha "' + ss.getName() + '": ' + feito.join(', ') + '. Abas atuais: ' +
@@ -101,8 +128,8 @@ function doGet() {
     const slots = horariosLivres_();
     return json_({
       ok: true,
-      valorServico: CONFIG.VALOR_SERVICO,
       valorSinal: CONFIG.VALOR_SINAL,
+      servicos: lerServicos_(),
       slots: slots,
     });
   } catch (err) {
@@ -143,6 +170,9 @@ function criarReserva_(body) {
   const endereco = limparTextoLivre(body.endereco, 150);
   if (endereco.length < 5) return { ok: false, erro: 'Informe o endereço com rua, número e bairro.' };
 
+  const pedido = calcularPedido(lerServicos_(), body.veiculo, body.servico, body.adicional);
+  if (!pedido) return { ok: false, erro: 'Escolha o tipo de veículo e o serviço.' };
+
   const data = String(body.data || '');
   const horario = normalizarHorario(body.horario);
   const livre = horariosLivres_().some(function (s) { return s.data === data && s.horario === horario; });
@@ -172,13 +202,18 @@ function criarReserva_(body) {
 
   const status = recorrente ? STATUS.CONFIRMADA : STATUS.AGUARDANDO;
   const agora = Utilities.formatDate(new Date(), CONFIG.FUSO, 'yyyy-MM-dd HH:mm:ss');
-  abaReservas_().appendRow([data, horario, telefone, status, agora, protegerCelula(nome), protegerCelula(endereco)]);
+  abaReservas_().appendRow([data, horario, telefone, status, agora, protegerCelula(nome), protegerCelula(endereco),
+    pedido.veiculo, pedido.servico, pedido.adicional ? 'sim' : 'não', pedido.valor]);
 
   avisarReserva_({
     data: data, horario: horario, telefone: telefone, nome: nome, endereco: endereco, recorrente: recorrente,
+    pedido: pedido,
   });
 
-  const resposta = { ok: true, status: status, recorrente: recorrente, data: data, horario: horario };
+  const resposta = {
+    ok: true, status: status, recorrente: recorrente, data: data, horario: horario,
+    servico: descreverPedido(pedido), valor: pedido.valor,
+  };
   if (!recorrente) {
     resposta.pix = {
       valor: CONFIG.VALOR_SINAL,
@@ -208,6 +243,12 @@ function lerHorarios_() {
       return { diaSemana: diaSemanaIndex(l[0]), horario: celulaHorario_(l[1], fuso) };
     })
     .filter(function (h) { return h.diaSemana >= 0 && h.horario; });
+}
+
+/** Tabela de serviços da aba "Servicos"; sem a aba (setup ainda não rodou de novo), usa SERVICOS_EXEMPLO. */
+function lerServicos_() {
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ABA_SERVICOS);
+  return montarServicos(aba ? aba.getDataRange().getValues().slice(1) : SERVICOS_EXEMPLO);
 }
 
 function lerReservas_() {
@@ -351,6 +392,42 @@ function reservasParaExpirar(linhas, agoraMs, horas) {
   return indices;
 }
 
+/** Linhas [código, nome, carro, camionete] → [{ codigo, nome, precos: { carro, camionete } }]. Ignora linhas sem preço. */
+function montarServicos(linhas) {
+  return linhas
+    .map(function (l) {
+      return {
+        codigo: normalizarTexto(l[0]),
+        nome: String(l[1] == null ? '' : l[1]).trim(),
+        precos: { carro: Number(l[2]), camionete: Number(l[3]) },
+      };
+    })
+    .filter(function (s) { return s.codigo && s.nome && s.precos.carro > 0 && s.precos.camionete > 0; });
+}
+
+/** Confere a escolha do cliente na tabela e soma o valor; null se o veículo ou o serviço não existem. */
+function calcularPedido(servicos, veiculo, codigo, adicional) {
+  const v = normalizarTexto(veiculo);
+  const c = normalizarTexto(codigo);
+  if (!VEICULOS[v] || !c || c === 'adicional') return null;
+  const servico = servicos.filter(function (s) { return s.codigo === c; })[0];
+  if (!servico) return null;
+  const extra = adicional === true || normalizarTexto(adicional) === 'sim'
+    ? servicos.filter(function (s) { return s.codigo === 'adicional'; })[0]
+    : null;
+  return {
+    veiculo: VEICULOS[v],
+    servico: servico.nome,
+    adicional: !!extra,
+    valor: servico.precos[v] + (extra ? extra.precos[v] : 0),
+  };
+}
+
+/** "Carro · Lavagem completa + adicional · R$ 75" */
+function descreverPedido(p) {
+  return p.veiculo + ' · ' + p.servico + (p.adicional ? ' + adicional' : '') + ' · R$ ' + p.valor;
+}
+
 function calcularSlots(hojeISO, horarios, ocupados, diasAFrente) {
   const p = hojeISO.split('-').map(Number);
   const ocupado = {};
@@ -433,6 +510,7 @@ function montarMensagem(r) {
   const linhas = [
     r.recorrente ? '✅ Nova reserva confirmada' : '🆕 NOVO CLIENTE — aguardando sinal de R$ ' + CONFIG.VALOR_SINAL,
     '📅 ' + dia + ', ' + p[2].toString().padStart(2, '0') + '/' + p[1].toString().padStart(2, '0') + ' ' + descreverHorario(r.horario),
+    '🚗 ' + descreverPedido(r.pedido),
     '👤 ' + r.nome,
     '📍 ' + r.endereco,
     'https://maps.google.com/?q=' + encodeURIComponent(r.endereco),

@@ -43,14 +43,14 @@ CSV no servidor foi descartado: site estático não consegue gravar arquivo, hav
 - **Dias:** terça a quinta, 2 a 3 horários por dia (**horários exatos ainda a definir**)
 - **Janela:** mostra até 3 semanas à frente; reserva permitida até o dia anterior
 - **Volume esperado:** 2 a 3 reservas por dia
-- **Valor do serviço:** R$ 50
+- **Serviço:** o cliente escolhe o veículo (carro ou camionete), lavagem externa, interna ou completa, e se quer o adicional. Os preços ficam na aba **Servicos** da planilha
 - **Sinal (só na primeira reserva):** R$ 20 via Pix (mostrar o valor em reais, sem porcentagem)
 - **Chave Pix:** telefone (18) 99805-1878 → no BR Code: `+5518998051878`
 - Gerar "Pix copia e cola" (e QR code) já com o valor de R$ 20
 
 ## Fluxo
 
-1. O cliente vê os horários livres, escolhe um e informa o telefone.
+1. O cliente clica em Reservar, escolhe o serviço e um horário livre e informa os dados.
 2. O script consulta o telefone na aba Reservas:
    - **Recorrente** (tem ao menos 1 reserva `confirmada`): grava como `confirmada`, mostra "Reserva confirmada!" e me notifica no WhatsApp.
    - **Novo:** grava como `aguardando sinal`, o horário fica bloqueado, mostra o aviso do sinal de R$ 20 com Pix copia e cola/QR e me notifica no WhatsApp com a marcação **NOVO CLIENTE**.

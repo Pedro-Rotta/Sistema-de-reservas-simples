@@ -33,7 +33,7 @@ function criarAmbiente(hojeISO, abas) {
     Utilities: { formatDate: fmt },
     SpreadsheetApp: {
       getActiveSpreadsheet: () => ({
-        getSheetByName: (n) => sheet(abas[n]),
+        getSheetByName: (n) => (abas[n] ? sheet(abas[n]) : null),
         getSpreadsheetTimeZone: () => 'America/Sao_Paulo',
       }),
     },
@@ -61,7 +61,10 @@ function criarAmbiente(hojeISO, abas) {
 }
 
 // tempoMs simula a pessoa levando 5 s entre abrir a página e enviar.
-const DADOS_CLIENTE = { nome: 'Maria Silva', endereco: 'Rua das Flores, 123, Centro', tempoMs: 5000, campo_extra: '' };
+const DADOS_CLIENTE = {
+  nome: 'Maria Silva', endereco: 'Rua das Flores, 123, Centro', tempoMs: 5000, campo_extra: '',
+  veiculo: 'carro', servico: 'completa', adicional: false,
+};
 const post = (g, body) => g.doPost({ postData: { contents: JSON.stringify({ ...DADOS_CLIENTE, ...body }) } });
 let total = 0;
 const teste = (nome, fn) => { fn(); total++; console.log('ok -', nome); };
@@ -301,6 +304,47 @@ teste('Pix informa o prazo de pagamento do sinal', () => {
   const g = criarAmbiente('2026-10-19', abasSimples());
   const r = post(g, BASE);
   assert.strictEqual(r.pix.prazoHoras, 12);
+});
+
+teste('serviço: soma o adicional pelo preço do veículo e recusa escolhas inválidas', () => {
+  const g = criarAmbiente('2026-10-19', {});
+  const tabela = g.lerServicos_(); // sem aba Servicos → tabela padrão
+  assert.strictEqual(g.calcularPedido(tabela, 'carro', 'externa', false).valor, 30);
+  assert.strictEqual(g.calcularPedido(tabela, 'carro', 'interna', true).valor, 50);
+  assert.strictEqual(g.calcularPedido(tabela, 'camionete', 'completa', true).valor, 110);
+  assert.strictEqual(g.calcularPedido(tabela, 'camionete', 'completa', 'sim').adicional, true);
+  assert.strictEqual(g.calcularPedido(tabela, 'moto', 'completa', false), null);
+  assert.strictEqual(g.calcularPedido(tabela, 'carro', 'adicional', false), null, 'adicional sozinho não é serviço');
+  assert.strictEqual(g.calcularPedido(tabela, 'carro', 'polimento', false), null);
+  assert.strictEqual(g.calcularPedido(tabela, 'carro', '', false), null);
+});
+
+teste('serviço: preços vêm da aba Servicos e são gravados na reserva', () => {
+  const abas = {
+    ...abasSimples(),
+    Servicos: [['Código', 'Nome', 'Carro', 'Camionete'],
+      ['externa', 'Só por fora', 32, 47], ['completa', 'Completa', 65, 95], ['adicional', 'Extra', 18, 22],
+      ['interna', 'Sem preço', '', '']],
+  };
+  const g = criarAmbiente('2026-10-19', abas);
+  assert.deepStrictEqual(g.doGet().servicos.map((s) => s.codigo), ['externa', 'completa', 'adicional'], 'linha sem preço some');
+
+  assert.strictEqual(post(g, { ...BASE, servico: 'interna' }).ok, false, 'serviço sem preço não pode ser reservado');
+  assert.strictEqual(post(g, { ...BASE, veiculo: '' }).ok, false, 'veículo obrigatório');
+  assert.strictEqual(abas.Reservas.length, 1, 'nada gravado');
+
+  const r = post(g, { ...BASE, veiculo: 'camionete', servico: 'externa', adicional: true, valor: 1 });
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.valor, 69, 'valor calculado no servidor, ignora o que veio da página');
+  assert.strictEqual(r.servico, 'Camionete · Só por fora + adicional · R$ 69');
+  assert.deepStrictEqual(Array.from(abas.Reservas[1]).slice(7), ['Camionete', 'Só por fora', 'sim', 69]);
+  assert.ok(g.emails[0].body.includes('🚗 Camionete · Só por fora + adicional · R$ 69'));
+});
+
+teste('serviço: sem a aba Servicos usa a tabela padrão', () => {
+  const g = criarAmbiente('2026-10-19', abasSimples());
+  assert.strictEqual(g.doGet().servicos.length, 4);
+  assert.strictEqual(post(g, BASE).valor, 60);
 });
 
 console.log(`\n${total} testes passaram.`);

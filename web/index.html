@@ -363,16 +363,29 @@
     <div class="faixa-reservas">
     <section id="reservas" class="reservas">
       <h2>Reserve seu horário</h2>
-      <form id="reservas-form" class="reservas-form" novalidate>
+      <!-- Os horários só são buscados depois que o cliente clica em Reservar. -->
+      <div id="reservas-inicio" class="reservas-inicio">
+        <p class="reservas-sub">Toque em Reservar para ver os dias e horários disponíveis.</p>
+        <button id="reservas-abrir" type="button" class="reservas-botao">Reservar</button>
+      </div>
+
+      <form id="reservas-form" class="reservas-form" novalidate hidden>
         <fieldset>
-          <legend>1. Escolha um horário</legend>
+          <legend>1. Escolha o serviço</legend>
+          <div id="reservas-servicos" aria-live="polite">
+            <p class="reservas-info">Carregando serviços…</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Escolha um horário</legend>
           <div id="reservas-slots" class="reservas-slots" aria-live="polite">
             <p class="reservas-info">Carregando horários…</p>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>2. Seus dados</legend>
+          <legend>3. Seus dados</legend>
           <label for="reservas-nome" class="reservas-label">Nome</label>
           <input id="reservas-nome" name="nome" type="text" autocomplete="name"
                  placeholder="Seu nome" maxlength="60" required>
@@ -399,6 +412,7 @@
       <div id="reservas-resultado" class="reservas-resultado" hidden>
         <h3 id="reservas-titulo"></h3>
         <p id="reservas-detalhe"></p>
+        <p id="reservas-servico-escolhido" class="reservas-info"></p>
 
         <div id="reservas-pix" class="reservas-pix" hidden>
           <p>Para garantir o horário na sua primeira reserva, pague o sinal de
