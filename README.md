@@ -14,13 +14,6 @@ docs/CONFIGURACAO.md     → passo a passo: planilha, CallMeBot, deploy e hosped
 tests/test.js            → testes do Code.gs com planilha simulada (node tests/test.js)
 ```
 
-**Para colocar no ar, siga [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md).**
-
-## Contexto
-
-Tenho uma landing page com minhas informações e quero adicionar reservas de horários.
-Quero algo rápido de desenvolver e simples de manter no ar, sem um backend completo.
-
 ## Arquitetura
 
 - **Front-end:** página estática (HTML/CSS/JS), hospedagem gratuita (GitHub Pages, Netlify ou Vercel).
@@ -60,14 +53,3 @@ CSV no servidor foi descartado: site estático não consegue gravar arquivo, hav
 ## Limitações aceitas
 
 - O telefone identifica o cliente, mas não comprova quem ele é (alguém poderia usar o número de outra pessoa). Risco baixo para este porte.
-
-## Pendências
-
-- [x] Definir os horários: terça a quinta, janelas de 08:00-11:00 e 13:00-16:00
-- [x] Criar o repositório do projeto
-
-## Entregáveis
-
-1. [x] Código do Google Apps Script
-2. [x] Página de reservas (HTML/JS) integrada à landing page
-3. [x] Passo a passo de configuração: planilha, deploy do Apps Script, ativação do CallMeBot e hospedagem
